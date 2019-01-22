@@ -1,0 +1,20 @@
+---
+title: "Analysis"
+author: "Lavonnia Newman, Jeff Washburn, & Joseph Caguioa"
+date: "2/25/2019"
+output: 
+  html_document:
+    theme: default
+    highlight: tango
+    toc: true
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+
+---
+
+```{r setup, include=F, message=F, results="hide", warning=F}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
