@@ -34,7 +34,7 @@ Address the following questions in analysis:
 ```{r load1}
 
 # Read in data set.
-employee <- read_excel('DDSAnalytics_Data.xlsx', sheet = "HR-employee-attrition Data")
+employee <- read_excel('Data/DDSAnalytics_Data.xlsx', sheet = "HR-employee-attrition Data")
 
 # Size of data set.
 employee_dim <- as.matrix(dim(employee))
