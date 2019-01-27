@@ -66,8 +66,12 @@ colnames(employee) <- renamed$`Modified Name`
 ```{r underage}
 
 # Remove <18-year-olds. [#3A]
+summary(employee$Age)
+plyr::count(employee, 'Over18')
 
 ```
+
+The number of "Y" entries for the "Over18" variable agrees with the total number of observations, 1,470. The minimum age, 18, confirms that there are no underage employees in the data set. 
 
 ```{r descriptive}
 
@@ -124,14 +128,10 @@ ggplot(employee, aes(x=factor(Education), y=MnthInc, group=Education, fill=Educa
                               "Bachelor",
                               "Master",
                               "Doctor")) +
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.5),
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         axis.ticks = element_blank(),
-        legend.position = 'none')
-
-# Relationship between job role and income.
-ggplot(employee, aes(x=JobRole, y=MnthInc, group=JobRole)) +
-  geom_boxplot() +
-  coord_flip()
+        legend.position = 'none',
+        plot.title = element_text(hjust = 0.5))
 
 # Relationship between education field and income.
 ggplot(employee, aes(x=EduField, y=MnthInc, group=EduField)) +
@@ -152,6 +152,21 @@ ggplot(employee, aes(x=YrsAtComp, y=MnthInc)) +
 
 ```
 
+```{r job-role}
+
+# Relationship between job role and income.
+ggplot(employee, aes(x=JobRole, y=MnthInc, group=JobRole)) +
+  geom_boxplot() +
+  coord_flip() +
+  xlab("Job Role") +
+  ylab("Monthly Income ($)") +
+  ggtitle("Monthly Income by Job")
+
+ggplot(employee, aes(x = JobRole, y = YrsAtComp, group = JobRole)) +
+  geom_point(alpha = 0.3) +
+  coord_flip()
+
+```
 
 ```{r life-satisfaction}
 
