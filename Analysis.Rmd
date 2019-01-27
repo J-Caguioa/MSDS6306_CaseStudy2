@@ -19,6 +19,8 @@ knitr::opts_chunk$set(echo = TRUE)
 package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra")
 lapply(package_list, library, character.only=T)
 
+theme_set(theme_bw())
+
 ```
 
 # Introduction
@@ -33,10 +35,10 @@ Address the following questions in analysis:
 
 ```{r load1}
 
-# Read in data set.
+# Read in data set. [#2A]
 employee <- read_excel('Data/DDSAnalytics_Data.xlsx', sheet = "HR-employee-attrition Data")
 
-# Size of data set.
+# Size of data set. [#2A]
 employee_dim <- as.matrix(dim(employee))
 rownames(employee_dim) <- c("Rows", "Columns")
 kable(employee_dim, col.names = "Size", row.names = T,
@@ -49,12 +51,13 @@ The data set contains observations on 1,470 employees with information on 35 var
 
 ```{r load2}
 
-# Convert column types.
-factorize <- c("Attrition", "BusinessTravel", "Department", "EducationField", "EnvironmentSatisfaction", "Gender", "JobInvolvement", "JobLevel", "JobRole", "JobSatisfaction", "MaritalStatus", "Over18", "OverTime", "PerformanceRating", "RelationshipSatisfaction", "WorkLifeBalance")
-employee[factorize] <- lapply(employee[factorize], as.factor)
+# Modify column names. All names less than 12 characters. [#2B]
+renamed <- read_excel('Data/VariableNames.xlsx')
+colnames(employee) <- renamed$`Modified Name`
 
-# Modify column names. All names less than 12 characters.
-
+# Convert column types. [#2D]
+# factorize <- c("Attrition", "BusinessTravel", "Department", "EducationField", "EnvironmentSatisfaction", "Gender", "JobInvolvement", "JobLevel", "JobRole", "JobSatisfaction", "MaritalStatus", "Over18", "OverTime", "PerformanceRating", "RelationshipSatisfaction", "WorkLifeBalance")
+# employee[factorize] <- lapply(employee[factorize], as.factor)
 
 ```
 
@@ -62,26 +65,26 @@ employee[factorize] <- lapply(employee[factorize], as.factor)
 
 ```{r underage}
 
-# Remove <18-year-olds.
+# Remove <18-year-olds. [#3A]
 
 ```
 
 ```{r descriptive}
 
-# Descriptive statistics (7) and histograms (2) for interesting variables.
+# Descriptive statistics (7) and histograms (2) for interesting variables. [#3B]
 
 ```
 
 ```{r frequencies}
 
-# Frequencies for Gender, Education, and Occupation.
+# Frequencies for Gender, Education, and Occupation. [#3C]
 
 ```
 
 
 ```{r management}
 
-# Counts of management positions.
+# Counts of management positions. [#3D]
 
 ```
 
@@ -89,41 +92,62 @@ employee[factorize] <- lapply(employee[factorize], as.factor)
 
 ```{r age-income}
 
-# Relationship between Age and Income.
-cor(employee$Age, employee$MonthlyIncome)
-lm1 <- lm(MonthlyIncome ~ Age, employee)
+# Relationship between Age and Income. [#4C]
+cor(employee$Age, employee$MnthInc)
+
+lm1 <- lm(MnthInc ~ Age, employee)
 summary(lm1)
-age_income_scatter <- ggplot(employee, aes(x=Age, y=MonthlyIncome, color=Gender)) +
-  geom_point(alpha=0.3)
+
+ggplot(employee, aes(x=Age, y=MnthInc, color=Gender)) +
+  geom_point(alpha=0.3) +
+  xlab("Age (years)") +
+  ylab("Monthly Income ($)") +
+  ggtitle("Monthly Income Rises with Age") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  geom_smooth(method = "lm",
+              se = F,
+              level = 0.95)
 
 ```
 
 ```{r income-vs-others}
 
 # Relationship between education and income.
-ggplot(employee, aes(x=Education, y=MonthlyIncome, group=Education)) +
-  geom_boxplot()
+ggplot(employee, aes(x=factor(Education), y=MnthInc, group=Education, fill=Education)) +
+  geom_boxplot() +
+  xlab("Level of Education") +
+  ylab("Monthly Income ($)") +
+  ggtitle("Monthly Income and Education") +
+  scale_x_discrete(labels = c("Below College",
+                              "College",
+                              "Bachelor",
+                              "Master",
+                              "Doctor")) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5),
+        axis.ticks = element_blank(),
+        legend.position = 'none')
 
 # Relationship between job role and income.
-ggplot(employee, aes(x=JobRole, y=MonthlyIncome, group=JobRole)) +
+ggplot(employee, aes(x=JobRole, y=MnthInc, group=JobRole)) +
   geom_boxplot() +
   coord_flip()
 
 # Relationship between education field and income.
-ggplot(employee, aes(x=EducationField, y=MonthlyIncome, group=EducationField)) +
+ggplot(employee, aes(x=EduField, y=MnthInc, group=EduField)) +
   geom_boxplot() +
   coord_flip()
 
 # Total working years vs income
-ggplot(employee, aes(x=TotalWorkingYears, y=MonthlyIncome)) +
+ggplot(employee, aes(x=TotalWrkYrs, y=MnthInc)) +
   geom_point()
 
-lm2 <- lm(MonthlyIncome ~ TotalWorkingYears, employee)
-cor(employee$TotalWorkingYears, employee$MonthlyIncome)
+lm2 <- lm(MnthInc ~ TotalWrkYrs, employee)
+cor(employee$TotalWrkYrs, employee$MnthInc)
 # Note: 0.77 cor, R2 ~ 0.597 ***
 
 # Years at company vs income
-ggplot(employee, aes(x=YearsAtCompany, y=MonthlyIncome)) +
+ggplot(employee, aes(x=YrsAtComp, y=MnthInc)) +
   geom_point()
 
 ```
