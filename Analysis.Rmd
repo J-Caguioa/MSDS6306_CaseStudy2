@@ -90,6 +90,41 @@ employee[factorize] <- lapply(employee[factorize], as.factor)
 ```{r age-income}
 
 # Relationship between Age and Income.
+cor(employee$Age, employee$MonthlyIncome)
+lm1 <- lm(MonthlyIncome ~ Age, employee)
+summary(lm1)
+age_income_scatter <- ggplot(employee, aes(x=Age, y=MonthlyIncome, color=Gender)) +
+  geom_point(alpha=0.3)
+
+```
+
+```{r income-vs-others}
+
+# Relationship between education and income.
+ggplot(employee, aes(x=Education, y=MonthlyIncome, group=Education)) +
+  geom_boxplot()
+
+# Relationship between job role and income.
+ggplot(employee, aes(x=JobRole, y=MonthlyIncome, group=JobRole)) +
+  geom_boxplot() +
+  coord_flip()
+
+# Relationship between education field and income.
+ggplot(employee, aes(x=EducationField, y=MonthlyIncome, group=EducationField)) +
+  geom_boxplot() +
+  coord_flip()
+
+# Total working years vs income
+ggplot(employee, aes(x=TotalWorkingYears, y=MonthlyIncome)) +
+  geom_point()
+
+lm2 <- lm(MonthlyIncome ~ TotalWorkingYears, employee)
+cor(employee$TotalWorkingYears, employee$MonthlyIncome)
+# Note: 0.77 cor, R2 ~ 0.597 ***
+
+# Years at company vs income
+ggplot(employee, aes(x=YearsAtCompany, y=MonthlyIncome)) +
+  geom_point()
 
 ```
 
