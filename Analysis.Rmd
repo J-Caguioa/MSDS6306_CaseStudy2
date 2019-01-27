@@ -15,6 +15,93 @@ output:
 
 ```{r setup, include=F, message=F, results="hide", warning=F}
 knitr::opts_chunk$set(echo = TRUE)
+
+package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra")
+lapply(package_list, library, character.only=T)
+
 ```
 
 # Introduction
+
+Insert scenario.
+
+Address the following questions in analysis:
+* Identify three or more factors that contribute to employee turnover.
+* Do other job-specific trends exist?
+
+# Load Data
+
+```{r load1}
+
+# Read in data set.
+employee <- read_excel('DDSAnalytics_Data.xlsx', sheet = "HR-employee-attrition Data")
+
+# Size of data set.
+employee_dim <- as.matrix(dim(employee))
+rownames(employee_dim) <- c("Rows", "Columns")
+kable(employee_dim, col.names = "Size", row.names = T,
+      caption = "Data Set Dimensions", table.attr="style='width:30%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+The data set contains observations on 1,470 employees with information on 35 variables.
+
+```{r load2}
+
+# Convert column types.
+factorize <- c("Attrition", "BusinessTravel", "Department", "EducationField", "EnvironmentSatisfaction", "Gender", "JobInvolvement", "JobLevel", "JobRole", "JobSatisfaction", "MaritalStatus", "Over18", "OverTime", "PerformanceRating", "RelationshipSatisfaction", "WorkLifeBalance")
+employee[factorize] <- lapply(employee[factorize], as.factor)
+
+# Modify column names. All names less than 12 characters.
+
+
+```
+
+# Preliminary Analysis
+
+```{r underage}
+
+# Remove <18-year-olds.
+
+```
+
+```{r descriptive}
+
+# Descriptive statistics (7) and histograms (2) for interesting variables.
+
+```
+
+```{r frequencies}
+
+# Frequencies for Gender, Education, and Occupation.
+
+```
+
+
+```{r management}
+
+# Counts of management positions.
+
+```
+
+# Deep Analysis
+
+```{r age-income}
+
+# Relationship between Age and Income.
+
+```
+
+
+```{r life-satisfaction}
+
+# Can life satisfaction be defined?
+
+```
+
+# Conclusion
+
+* Identify three factors contributing to turnover.
+* Identify any existing job-specific trends.
+* Other considerations, such as next steps or other variables needed.
