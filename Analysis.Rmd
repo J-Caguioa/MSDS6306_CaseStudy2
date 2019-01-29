@@ -15,8 +15,9 @@ output:
 
 ```{r setup, include=F, message=F, results="hide", warning=F}
 knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
 
-package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra")
+package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot")
 lapply(package_list, library, character.only=T)
 
 theme_set(theme_bw())
@@ -89,6 +90,128 @@ The number of "Y" entries for the "Over18" variable agrees with the total number
 ```{r management}
 
 # Counts of management positions. [#3D]
+
+```
+
+# Correlation Study
+
+``` {r correlations1, warning=F}
+
+# Column type conversion. Attrition forced to 1/0 binary. Other character variables coerced to numeric for correlogram.
+employee_numeric <- data.frame(employee)
+employee_numeric$Attrition <- ifelse(employee_numeric$Attrition == "Yes", 1, 0)
+employee_numeric <- employee_numeric %>% mutate_if(is.character, as.factor) %>% mutate_if(is.factor, as.numeric)
+
+# Percent of employees who left.
+mean(employee_numeric$Attrition)
+
+# Dirty correlogram to show correlating variables for further investigation.
+corrplot(cor(employee_numeric), type = "upper", tl.col = "black", tl.srt = 45, tl.cex = 0.5, number.cex = 0.3)
+
+```
+
+For reference, the correlogram shows some correlations between the following variables ("Years%" refers to the last four variables beginning with the word "Years"):
+
+* Age: Education, JobLevel, MonthlyIncome, TotalWorkingYears, Years%
+* Department: JobRole
+    + Possibly makes sense, as certain job roles tend to be used in certain departments. Cross-reference back to original factors; the numeric coercion may be creating noise.
+* Education: NumCompaniesWorked, TotalWorkingYears
+* JobLevel: MonthlyIncome, TotalWorkingYears, Years%
+* MaritalStatus: StockOptionLevel
+* MonthlyIncome: Age, TotalWorkingYears, Years%
+    + Likely increases with experience
+* NumCompaniesWorked: TotalWorkingYears
+* PercentSalaryHike: PerformanceRating
+    + According to FAQs, data is self-reported. Performance rating is likely artificially high.
+* TotalWorkingYears: Age, JobLevel, MonthlyIncome, Years%
+* Years%: Other Years%
+
+```{r correlations2}
+
+# Divorced = 1, Married = 2, Single = 3. All Singles have StockOptionLevel = 0.
+table(employee_numeric$MaritalStat, employee_numeric$StckOptLev)
+
+# Overtime 1 = No, 2 = Yes. About the same percentage of people worked overtime, regardless of marital status.
+table(employee_numeric$MaritalStat, employee_numeric$Overtime)
+
+# Percentagewise, marital status distributed evenly by job level.
+table(employee_numeric$MaritalStat, employee_numeric$JobLevel)
+
+```
+
+Attrition's individual correlations are relatively weak. Perhaps studying interaction effects will show a stronger effect.
+
+* Attrition: Age, EnvironmentSatisfaction, JobInvolvement, JobLevel, JobSatisfaction, MaritalStatus, MonthlyIncome, OverTime, StockOptionLevel, TotalWorkingYears, YearsAtCompany, YearsInCurrentRole, YearsWithCurrManager
+    + MaritalStatus and OverTime show positive correlations, the rest are negative. Makes sense in context for some, eg, lower JobInvolvement/Level/Satisfaction increases likelihood of attrition?
+
+# Attrition
+
+```{r attrition}
+
+attrition <- employee_numeric[employee_numeric$Attrition == 1, ]
+attrition_summary <- data.frame(do.call('rbind', lapply(attrition, function(x) if(is.numeric(x)) summary(x))))
+attrition_summary$Mean <- round(attrition_summary$Mean, digits=2)
+colnames(attrition_summary) <- c("Minimum", "1st Quartile", "Median", "Mean", "3rd Quartile", "Maximum")
+
+kable(attrition_summary, row.names = T,
+      caption = "Statistics of People Who Left", 
+      table.attr="style='width:90%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+ggplot(employee, aes(x=Age, y=MnthInc, color=Gender)) +
+  geom_point(alpha=0.3) +
+  xlab("Age (years)") +
+  ylab("Monthly Income ($)") +
+  ggtitle("Attrition, Age, & Monthly Income") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  facet_grid(. ~ Attrition)
+
+ggplot(employee, aes(x=YrsAtComp)) +
+  geom_histogram() +
+  xlab("Years at Company") +
+  ylab("Count") +
+  ggtitle("Attrition and Years at Company") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  facet_grid(Attrition ~ .)
+
+ggplot(employee, aes(x=YrsCurrRole)) +
+  geom_histogram() +
+  xlab("Years at Company") +
+  ylab("Count") +
+  ggtitle("Attrition and Years in Current Role") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  facet_grid(Attrition ~ .)
+
+ggplot(employee, aes(x=TotalWrkYrs)) +
+  geom_histogram() +
+  xlab("Years at Company") +
+  ylab("Count") +
+  ggtitle("Attrition and Total Working Years") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  facet_grid(Attrition ~ .)
+
+ggplot(employee, aes(x=Attrition, y=Education, group=Attrition)) +
+  geom_boxplot() +
+  xlab("Attrition") +
+  ylab("Education Level") +
+  ggtitle("Attrition and Education") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+
+prop.table(table(employee_numeric$Attrition, employee_numeric$MaritalStat))
+
+# Row-wise proportion of attrition by job role. Of those who left, 3/7/8/9 are most represented.
+prop.table(table(employee_numeric$Attrition, employee_numeric$JobRole), 1)
+
+# Row-wise proportions of attrition vs work-life balance. Slight increase in people with 'bad' (1) work-life balance among those who left.
+prop.table(table(employee_numeric$Attrition, employee_numeric$WorkLifeBal), 1)
+
+# Row-wise proportions of attrition vs job satisfaction. For those who left, slight decrease in 'very high' (4) reallocated to 'low' (1).
+prop.table(table(employee_numeric$Attrition, employee_numeric$JobSat), 1)
 
 ```
 
