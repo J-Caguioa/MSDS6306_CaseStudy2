@@ -285,9 +285,41 @@ ggplot(employee, aes(x=JobRole, y=MnthInc, group=JobRole)) +
   ylab("Monthly Income ($)") +
   ggtitle("Monthly Income by Job")
 
-ggplot(employee, aes(x = JobRole, y = YrsAtComp, group = JobRole)) +
-  geom_point(alpha = 0.3) +
-  coord_flip()
+ggplot(employee, aes(x=JobRole, y=YrsAtComp, group=JobRole)) +
+  geom_boxplot() +
+  coord_flip() +
+  xlab("Job Role") +
+  ylab("Years at Current Company") +
+  ggtitle("Years with Current Employer by Job")
+
+ggplot(employee, aes(x=JobRole, y=NumCoWorked, group=JobRole)) +
+  geom_boxplot() +
+  coord_flip() +
+  xlab("Job Role") +
+  ylab("Number of Companies Worked") +
+  ylim(c(0,10))
+  ggtitle("Work History by Job")
+  
+ggplot(employee, aes(x=JobRole, y=JobSat)) +
+  geom_boxplot() +
+  coord_flip() +
+  xlab("Job Role") +
+  ylab("Job Satisfaction") +
+  ggtitle("Job Satisfaction by Role")
+
+ggplot(employee, aes(x=JobRole, y=PcntSalInc)) +
+  geom_boxplot() +
+  coord_flip() +
+  xlab("Job Role") +
+  ylab("Percent Salary Increase") +
+  ggtitle("Yearly Raise by Job")
+
+ggplot(employee, aes(x=JobRole, y=WorkLifeBal)) +
+  geom_jitter(alpha=0.3) +
+  coord_flip() +
+  xlab("Job Role") +
+  ylab("Work-Life Balance") +
+  ggtitle("Work Life Balance by Job")
 
 ```
 
