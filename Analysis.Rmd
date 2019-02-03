@@ -93,7 +93,7 @@ ggplot(employee, aes(Age)) +
 # Income
 summary(employee$MnthInc)
 ggplot(employee, aes(MnthInc)) + 
-  geom_histogram(breaks=seq(20, 50, by=2), 
+  geom_histogram(breaks=seq(1000, 22000, by=500), 
                  col="red", 
                  aes(fill=..count..)) +
   scale_fill_gradient("Count", low="green", high="red")
