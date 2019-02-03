@@ -91,9 +91,12 @@ ggplot(employee, aes(Age)) +
   scale_fill_gradient("Count", low="green", high="red")
 
 # Income
-summary(employee$Income)
-ggplot(employee, aes(MnthInc)) +
-  geom_histogram()
+summary(employee$MnthInc)
+ggplot(employee, aes(MnthInc)) + 
+  geom_histogram(breaks=seq(20, 50, by=2), 
+                 col="red", 
+                 aes(fill=..count..)) +
+  scale_fill_gradient("Count", low="green", high="red")
 ```
 
 ```{r frequencies}
