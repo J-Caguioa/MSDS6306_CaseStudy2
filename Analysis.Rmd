@@ -17,7 +17,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 999)
 
-package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot")
+package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic")
 lapply(package_list, library, character.only=T)
 
 theme_set(theme_bw())
@@ -54,11 +54,16 @@ The data set contains observations on 1,470 employees with information on 35 var
 
 # Modify column names. All names less than 12 characters. [#2B]
 renamed <- read_excel('Data/VariableNames.xlsx')
-colnames(employee) <- renamed$`Modified Name`
+colnames(employee) <- renamed$`Modified_Name`
 
 # Convert column types. [#2D]
 # factorize <- c("Attrition", "BusinessTravel", "Department", "EducationField", "EnvironmentSatisfaction", "Gender", "JobInvolvement", "JobLevel", "JobRole", "JobSatisfaction", "MaritalStatus", "Over18", "OverTime", "PerformanceRating", "RelationshipSatisfaction", "WorkLifeBalance")
 # employee[factorize] <- lapply(employee[factorize], as.factor)
+
+# Another option that converts all to numeric.
+# employee <- employee %>% 
+#   mutate_if(is.character, as.factor) %>% 
+#   mutate_if(is.factor, as.numeric) 
 
 ```
 
@@ -68,7 +73,7 @@ colnames(employee) <- renamed$`Modified Name`
 
 # Remove <18-year-olds. [#3A]
 summary(employee$Age)
-plyr::count(employee, 'Over18')
+count(employee, "Over18")
 
 ```
 
@@ -213,6 +218,12 @@ prop.table(table(employee_numeric$Attrition, employee_numeric$WorkLifeBal), 1)
 # Row-wise proportions of attrition vs job satisfaction. For those who left, slight decrease in 'very high' (4) reallocated to 'low' (1).
 prop.table(table(employee_numeric$Attrition, employee_numeric$JobSat), 1)
 
+# ggplot(employee, aes(x=StckOptLev, y=Attrition, fill=Attrition)) +
+#   geom_col(position="fill")
+mosaicplot(Attrition ~ StckOptLev, data = employee)
+# ggplot(employee_numeric) +
+#   geom_mosaic(aes(x=product(StckOptLev, Attrition), fill=StckOptLev), na.rm=T)
+
 ```
 
 # Deep Analysis
@@ -322,6 +333,16 @@ ggplot(employee, aes(x=JobRole, y=WorkLifeBal)) +
   ggtitle("Work Life Balance by Job")
 
 ```
+
+# Life Satisfaction
+
+One potential starting point involves using variables with the word "satisfaction" in their name:
+
+* Environment Satisfaction
+* Job Satisfaction
+* Relationship Satisfaction
+
+Perhaps also 
 
 ```{r life-satisfaction}
 
