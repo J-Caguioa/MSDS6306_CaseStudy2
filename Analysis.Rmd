@@ -79,10 +79,21 @@ count(employee, "Over18")
 
 The number of "Y" entries for the "Over18" variable agrees with the total number of observations, 1,470. The minimum age, 18, confirms that there are no underage employees in the data set. 
 
-```{r descriptive}
-
+```{r descriptive,echo=TRUE}
 # Descriptive statistics (7) and histograms (2) for interesting variables. [#3B]
 
+# age
+summary(employee$Age)
+ggplot(employee, aes(Age)) + 
+  geom_histogram(breaks=seq(20, 50, by=2), 
+                 col="red", 
+                 aes(fill=..count..)) +
+  scale_fill_gradient("Count", low="green", high="red")
+
+# Income
+summary(employee$Income)
+ggplot(employee, aes(MnthInc)) +
+  geom_histogram()
 ```
 
 ```{r frequencies}
