@@ -228,6 +228,8 @@ mosaicplot(Attrition ~ StckOptLev, data = employee)
 
 # Deep Analysis
 
+## Age and Income
+
 ```{r age-income}
 
 # Relationship between Age and Income. [#4C]
@@ -247,7 +249,12 @@ ggplot(employee, aes(x=Age, y=MnthInc, color=Gender)) +
               se = F,
               level = 0.95)
 
+par(mfrow=c(2,2))
+plot(lm1)
+
 ```
+
+A moderate positive correlation (Pearson's r = 0.498) exists between age and monthly income. Drawing a scatterplot between the two shows a general upward trend in income as age increases, and the best-fitting regression line has a positive slope. However, a linear relationship may not be an optimal model for these variables.
 
 ```{r income-vs-others}
 
@@ -285,6 +292,8 @@ ggplot(employee, aes(x=YrsAtComp, y=MnthInc)) +
   geom_point()
 
 ```
+
+## Job-Specific Trends
 
 ```{r job-role}
 
@@ -334,7 +343,7 @@ ggplot(employee, aes(x=JobRole, y=WorkLifeBal)) +
 
 ```
 
-# Life Satisfaction
+## Life Satisfaction
 
 One potential starting point involves using variables with the word "satisfaction" in their name:
 
@@ -342,7 +351,7 @@ One potential starting point involves using variables with the word "satisfactio
 * Job Satisfaction
 * Relationship Satisfaction
 
-Perhaps also 
+Perhaps monthly income should also be considered.
 
 ```{r life-satisfaction}
 
