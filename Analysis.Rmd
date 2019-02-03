@@ -81,22 +81,26 @@ The number of "Y" entries for the "Over18" variable agrees with the total number
 
 ```{r descriptive,echo=TRUE}
 # Descriptive statistics (7) and histograms (2) for interesting variables. [#3B]
+# age, income, %salaryhike, yrsatcomp, yrscurrrole, yrssncpromo, yrswtcurmgr
 
 # age
+# 
 summary(employee$Age)
-ggplot(employee, aes(Age)) + 
-  geom_histogram(breaks=seq(20, 50, by=2), 
-                 col="red", 
-                 aes(fill=..count..)) +
-  scale_fill_gradient("Count", low="green", high="red")
+ggAge = ggplot(employee, aes(Age))
+ggAge = ggAge +geom_histogram(breaks=seq(20, 50, by=2), col="black", aes(fill=..count.., y=..density..)) 
+ggAge = ggAge +scale_fill_gradient("Count", low="green", high="red")
+ggAge = ggAge +geom_density(col="blue")
+ggAge = ggAge +labs(title="Histogram for Age", x="Age", y="Density")
+ggAge
 
 # Income
 summary(employee$MnthInc)
-ggplot(employee, aes(MnthInc)) + 
-  geom_histogram(breaks=seq(1000, 22000, by=1000), 
-                 col="red", 
-                 aes(fill=..count..)) +
-  scale_fill_gradient("Count", low="green", high="red")
+ggIncome = ggplot(employee, aes(MnthInc))
+ggIncome = ggIncome +geom_histogram(breaks=seq(1000, 22000, by=1000), col="black", aes(fill=..count.., y=..density..))
+ggIncome = ggIncome +scale_fill_gradient("Count", low="green", high="red")
+ggIncome = ggIncome +geom_density(col="blue")
+ggIncome = ggIncome +labs(title="Histogram for Income", x="Income", y="Density")
+ggIncome
 ```
 
 ```{r frequencies}
