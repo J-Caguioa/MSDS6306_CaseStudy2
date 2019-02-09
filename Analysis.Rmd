@@ -268,10 +268,14 @@ train_task
 
 ``` {r gender}
 
-data.frame(table(employee$Gender))
-GenderData<-data.frame(table(employee$Gender))
+str(employee)
+GenderData<- table(employee$Gender)
 names(GenderData) <- c("Gender", "Count")
 GenderData
+
+EducationData <- table(employee$Education)
+names(EducationData) <-c("Below College", "College", "Bachelor", "Master", "Doctor")
+EducationData
 
 
 
