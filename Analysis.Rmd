@@ -448,6 +448,34 @@ train_task <- dropFeatures(task=train_task, features=c("EmpId", "StandHours"))
 
 ```
 
+```{r glm}
+
+drop <- c("EmpCount", "EmpID", "Over18", "StandHours")
+employee_factor <- employee_factor[ , !(names(employee_factor) %in% drop)]
+
+set.seed(307)
+train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.7, list=F)
+train_subset <- employee_factor[train_rows,]
+test_subset <- employee_factor[-train_rows,]
+
+employee_glm <- glm(Attrition~., data=employee_factor, family="binomial")
+summary(employee_glm)
+imp <- as.data.frame(varImp(employee_glm))
+imp <- data.frame(overall = imp$Overall, names=rownames(imp))
+imp[order(imp$overall, decreasing=T),]
+
+train_glm <- glm(Attrition~., data=train_subset, family="binomial")
+summary(train_glm)
+imp <- as.data.frame(varImp(train_glm))
+imp <- data.frame(overall = imp$Overall, names=rownames(imp))
+imp[order(imp$overall, decreasing=T),]
+
+prob <- predict(train_glm, test_subset, type="response")
+test_subset$Pred <- ifelse(prob > 0.141, "Yes", "No")
+mean(test_subset$Pred == test_subset$Attrition)
+
+```
+
 ## 4d. Life Satisfaction
 
 One potential starting point involves using variables with the word "satisfaction" in their name:
