@@ -32,7 +32,7 @@ Address the following questions in analysis:
 * Identify three or more factors that contribute to employee turnover.
 * Do other job-specific trends exist?
 
-# Load Data
+# 2. Load/Clean Data
 
 ```{r load1}
 
@@ -67,7 +67,9 @@ colnames(employee) <- renamed$`Modified_Name`
 
 ```
 
-# Preliminary Analysis
+# 3. Preliminary Analysis
+
+## 3a. Remove all under 18
 
 ```{r underage}
 
@@ -79,6 +81,8 @@ count(employee, "Over18")
 
 The number of "Y" entries for the "Over18" variable agrees with the total number of observations, 1,470. The minimum age, 18, confirms that there are no underage employees in the data set. 
 
+
+## 3b. Descriptive stats
 ```{r descriptive,echo=TRUE}
 # Descriptive statistics (7) and histograms (2) for interesting variables. [#3B]
 # age, income, %salaryhike, yrsatcomp, yrscurrrole, yrssncpromo, yrswtcurmgr
@@ -103,7 +107,7 @@ ggIncome = ggIncome +labs(title="Histogram for Income", x="Income", y="Density")
 ggIncome
 ```
 
-# Gender, Education Occupation
+## 3c. Frequencies on Gender, Education Occupation
 
 ```{r frequencies}
 
@@ -138,6 +142,7 @@ kable(JobRoleData,
 
 ```
 
+## 3d. Counts of Management positions
 
 ```{r management}
 
@@ -146,7 +151,7 @@ manager
 
 ```
 
-# Correlation Study
+## 3e. Further Analysis - Correlation
 
 ``` {r correlations1, warning=F}
 
@@ -202,7 +207,7 @@ Attrition's individual correlations are relatively weak. Perhaps studying intera
 * Attrition: Age, EnvironmentSatisfaction, JobInvolvement, JobLevel, JobSatisfaction, MaritalStatus, MonthlyIncome, OverTime, StockOptionLevel, TotalWorkingYears, YearsAtCompany, YearsInCurrentRole, YearsWithCurrManager
     + MaritalStatus and OverTime show positive correlations, the rest are negative. Makes sense in context for some, eg, lower JobInvolvement/Level/Satisfaction increases likelihood of attrition?
 
-# Attrition
+## 3f. Further Analysis - Attrition
 
 ```{r attrition1}
 
@@ -296,9 +301,9 @@ train_task
 ```
 #
 
-# Deep Analysis
+# 4. Deep Analysis
 
-## Age and Income
+## 4c. Age and Income
 
 ```{r age-income}
 
@@ -413,7 +418,7 @@ ggplot(employee, aes(x=JobRole, y=WorkLifeBal)) +
 
 ```
 
-## Life Satisfaction
+## 4d. Life Satisfaction
 
 One potential starting point involves using variables with the word "satisfaction" in their name:
 
