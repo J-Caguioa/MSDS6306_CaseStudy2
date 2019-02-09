@@ -87,6 +87,12 @@ The number of "Y" entries for the "Over18" variable agrees with the total number
 # Descriptive statistics (7) and histograms (2) for interesting variables. [#3B]
 # Age, MnthInc, PcntSalInc, YrsAtComp, YrsCurrRole, YrsSncPromo, YrsWtCurMgr
 
+descriptiveStats = employee[c("Age", "MnthInc", "PcntSalInc", "YrsAtComp", "YrsCurrRole", "YrsSncPromo", "YrsWtCurMgr")]
+
+summary(descriptiveStats)
+kable(summary(descriptiveStats))
+
+
 # Descriptive stats - Age
 summary(employee$Age)
 
