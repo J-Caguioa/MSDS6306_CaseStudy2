@@ -103,16 +103,46 @@ ggIncome = ggIncome +labs(title="Histogram for Income", x="Income", y="Density")
 ggIncome
 ```
 
+# Gender, Education Occupation
+
 ```{r frequencies}
 
-# Frequencies for Gender, Education, and Occupation. [#3C]
+GenderData<- table(employee$Gender)
+kable(GenderData,
+      col.names = c("Gender",
+                    "Count"),
+      row.names = T,
+      caption="Headcount By Gender",
+      table.attr="style='width:30%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+
+EducationData <- table(employee$Education)
+names(EducationData)<-c("Below College", "College", "Bachelor", "Master", "Doctor")
+kable(EducationData,
+      col.names = c("Education Level", "Count"),
+      row.names = T,
+      caption="Headcout by Education",
+      table.attr="style='width:30%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+
+JobRoleData <- data.frame(table(employee$JobRole))
+names(JobRoleData) <- c("Job Roles", "Count")
+kable(JobRoleData,
+      col.names = c("Job Role", "Count"),
+      row.names = T,
+      caption="Headcout by Job Role",
+      table.attr="style='width:50%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
 ```
 
 
 ```{r management}
 
-# Counts of management positions. [#3D]
+manager <- data.frame(JobRoleData[4:6,])
+manager
 
 ```
 
@@ -262,47 +292,6 @@ train_task <- makeClassifTask(data=train_subset, target="Attrition", positive="Y
 test_task <- makeClassifTask(data=test_subset, target="Attrition")
 
 train_task
-
-```
-# Gender, Education Occupation
-# Tables created for each of the topics of Gender, Education and JobRole
-
-``` {r gender}
-
-str(employee)
-GenderData<- table(employee$Gender)
-kable(GenderData,
-      col.names = c("Gender",
-                    "Count"),
-      row.names = T,
-      caption="Headcount By Gender",
-      table.attr="style='width:30%;'") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-
-
-EducationData <- table(employee$Education)
-EducationData
-names(EducationData)<-c("Below College", "College", "Bachelor", "Master", "Doctor")
-kable(EducationData,
-      col.names = c("Education Level", "Count"),
-      row.names = T,
-      caption="Headcout by Education",
-      table.attr="style='width:30%;'") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-
-
-JobRoleData <- data.frame(table(employee$JobRole))
-names(JobRoleData) <- c("Job Roles", "Count")
-kable(JobRoleData,
-      col.names = c("Job Role", "Count"),
-      row.names = T,
-      caption="Headcout by Job Role",
-      table.attr="style='width:50%;'") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-JobRoleData
-
-manager <- data.frame(JobRoleData[4:6,])
-manager
 
 ```
 #
