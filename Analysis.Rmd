@@ -293,6 +293,10 @@ test_task <- makeClassifTask(data=test_subset, target="Attrition")
 
 train_task
 
+train_task <- normalizeFeatures(train_task, method="standardize")
+test_task <- normalizeFeatures(train_task, method="standardize")
+train_task <- dropFeatures(task=train_task, features=c("EmpId", "StandHours"))
+
 ```
 #
 
