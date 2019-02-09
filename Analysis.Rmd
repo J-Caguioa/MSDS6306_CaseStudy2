@@ -265,6 +265,7 @@ train_task
 
 ```
 # Gender, Education Occupation
+# Tables created for each of the topics of Gender, Education and JobRole
 
 ``` {r gender}
 
@@ -277,7 +278,9 @@ EducationData <- table(employee$Education)
 names(EducationData) <-c("Below College", "College", "Bachelor", "Master", "Doctor")
 EducationData
 
-
+JobRoleData <- data.frame(table(employee$JobRole))
+names(JobRoleData) <- c("Job Roles", "Count")
+JobRoleData
 
 ```
 #
