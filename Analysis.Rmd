@@ -118,7 +118,7 @@ summary(employee$YrsWtCurMgr)
 # 
 summary(employee$Age)
 ggAge = ggplot(employee, aes(Age))
-ggAge = ggAge +geom_histogram(breaks=seq(20, 60, by=2), col="black", aes(fill=..count.., y=..density..)) 
+ggAge = ggAge +geom_histogram(breaks=seq(18, 60, by=2), col="black", aes(fill=..count.., y=..density..)) 
 ggAge = ggAge +scale_fill_gradient("Count", low="green", high="red")
 ggAge = ggAge +geom_density(col="blue")
 ggAge = ggAge +labs(title="Histogram for Age", x="Age", y="Density")
