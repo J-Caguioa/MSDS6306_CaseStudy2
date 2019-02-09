@@ -271,16 +271,38 @@ train_task
 
 str(employee)
 GenderData<- table(employee$Gender)
-names(GenderData) <- c("Gender", "Count")
-GenderData
+kable(GenderData,
+      col.names = c("Gender",
+                    "Count"),
+      row.names = T,
+      caption="Headcount By Gender",
+      table.attr="style='width:30%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
 
 EducationData <- table(employee$Education)
-names(EducationData) <-c("Below College", "College", "Bachelor", "Master", "Doctor")
 EducationData
+names(EducationData)<-c("Below College", "College", "Bachelor", "Master", "Doctor")
+kable(EducationData,
+      col.names = c("Education Level", "Count"),
+      row.names = T,
+      caption="Headcout by Education",
+      table.attr="style='width:30%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
 
 JobRoleData <- data.frame(table(employee$JobRole))
 names(JobRoleData) <- c("Job Roles", "Count")
+kable(JobRoleData,
+      col.names = c("Job Role", "Count"),
+      row.names = T,
+      caption="Headcout by Job Role",
+      table.attr="style='width:50%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 JobRoleData
+
+manager <- data.frame(JobRoleData[4:6,])
+manager
 
 ```
 #
