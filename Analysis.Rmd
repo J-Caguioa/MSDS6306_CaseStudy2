@@ -264,6 +264,19 @@ test_task <- makeClassifTask(data=test_subset, target="Attrition")
 train_task
 
 ```
+# Gender, Education Occupation
+
+``` {r gender}
+
+data.frame(table(employee$Gender))
+GenderData<-data.frame(table(employee$Gender))
+names(GenderData) <- c("Gender", "Count")
+GenderData
+
+
+
+```
+#
 
 # Deep Analysis
 
