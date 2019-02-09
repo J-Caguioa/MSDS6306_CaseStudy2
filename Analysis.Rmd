@@ -17,7 +17,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 999)
 
-package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic")
+package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic", "magrittr", "caret")
 lapply(package_list, library, character.only=T)
 
 theme_set(theme_bw())
@@ -125,6 +125,11 @@ employee_numeric <- data.frame(employee)
 employee_numeric$Attrition <- ifelse(employee_numeric$Attrition == "Yes", 1, 0)
 employee_numeric <- employee_numeric %>% mutate_if(is.character, as.factor) %>% mutate_if(is.factor, as.numeric)
 
+employee_factor <- data.frame(employee)
+employee_factor <- employee_factor %>% mutate_if(is.character, as.factor)
+factor_cols <- c("Education", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StandHours", "StckOptLev", "WorkLifeBal")
+employee_factor %<>% mutate_each_(funs(factor(.)), factor_cols)
+
 # Percent of employees who left.
 mean(employee_numeric$Attrition)
 
@@ -169,7 +174,7 @@ Attrition's individual correlations are relatively weak. Perhaps studying intera
 
 # Attrition
 
-```{r attrition}
+```{r attrition1}
 
 attrition <- employee_numeric[employee_numeric$Attrition == 1, ]
 attrition_summary <- data.frame(do.call('rbind', lapply(attrition, function(x) if(is.numeric(x)) summary(x))))
@@ -210,7 +215,7 @@ ggplot(employee, aes(x=YrsCurrRole)) +
 
 ggplot(employee, aes(x=TotalWrkYrs)) +
   geom_histogram() +
-  xlab("Years at Company") +
+  xlab("Total Working Years") +
   ylab("Count") +
   ggtitle("Attrition and Total Working Years") +
   theme(axis.ticks = element_blank(),
@@ -241,6 +246,22 @@ prop.table(table(employee_numeric$Attrition, employee_numeric$JobSat), 1)
 mosaicplot(Attrition ~ StckOptLev, data = employee)
 # ggplot(employee_numeric) +
 #   geom_mosaic(aes(x=product(StckOptLev, Attrition), fill=StckOptLev), na.rm=T)
+
+```
+
+```{r attrition2}
+
+# Stratified sampling on Attrition.
+set.seed(307)
+train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.7, list=F)
+train_subset <- employee_factor[train_rows,]
+test_subset <- employee_factor[-train_rows,]
+
+# Create task.
+train_task <- makeClassifTask(data=train_subset, target="Attrition", positive="Yes")
+test_task <- makeClassifTask(data=test_subset, target="Attrition")
+
+train_task
 
 ```
 
