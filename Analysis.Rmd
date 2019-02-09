@@ -85,9 +85,31 @@ The number of "Y" entries for the "Over18" variable agrees with the total number
 ## 3b. Descriptive stats
 ```{r descriptive,echo=TRUE}
 # Descriptive statistics (7) and histograms (2) for interesting variables. [#3B]
-# age, income, %salaryhike, yrsatcomp, yrscurrrole, yrssncpromo, yrswtcurmgr
+# Age, MnthInc, PcntSalInc, YrsAtComp, YrsCurrRole, YrsSncPromo, YrsWtCurMgr
 
-# age
+# Descriptive stats - Age
+summary(employee$Age)
+
+# Descriptive stats - MnthInc
+summary(employee$MnthInc)
+
+# Descriptive stats - PcntSalInc
+summary(employee$PcntSalInc)
+
+# Descriptive stats - YrsAtComp
+summary(employee$YrsAtComp)
+
+# Descriptive stats - YrsCurrRole
+summary(employee$YrsCurrRole)
+
+# Descriptive stats - YrsSncPromo
+summary(employee$YrsSncPromo)
+
+# Descriptive stats - YrsWtCurMgr
+summary(employee$YrsWtCurMgr)
+
+
+# Histogram - age
 # 
 summary(employee$Age)
 ggAge = ggplot(employee, aes(Age))
@@ -97,7 +119,7 @@ ggAge = ggAge +geom_density(col="blue")
 ggAge = ggAge +labs(title="Histogram for Age", x="Age", y="Density")
 ggAge
 
-# Income
+# Histogram - Income
 summary(employee$MnthInc)
 ggIncome = ggplot(employee, aes(MnthInc))
 ggIncome = ggIncome +geom_histogram(breaks=seq(1000, 22000, by=1000), col="black", aes(fill=..count.., y=..density..))
