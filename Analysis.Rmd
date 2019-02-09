@@ -178,7 +178,9 @@ manager
 
 ```
 
-## 3e. Further Analysis - Correlation
+# 4. Deep Analysis
+
+## Correlation
 
 ``` {r correlations1, warning=F}
 
@@ -233,106 +235,6 @@ Attrition's individual correlations are relatively weak. Perhaps studying intera
 
 * Attrition: Age, EnvironmentSatisfaction, JobInvolvement, JobLevel, JobSatisfaction, MaritalStatus, MonthlyIncome, OverTime, StockOptionLevel, TotalWorkingYears, YearsAtCompany, YearsInCurrentRole, YearsWithCurrManager
     + MaritalStatus and OverTime show positive correlations, the rest are negative. Makes sense in context for some, eg, lower JobInvolvement/Level/Satisfaction increases likelihood of attrition?
-
-## 3f. Further Analysis - Attrition
-
-```{r attrition1}
-
-attrition <- employee_numeric[employee_numeric$Attrition == 1, ]
-attrition_summary <- data.frame(do.call('rbind', lapply(attrition, function(x) if(is.numeric(x)) summary(x))))
-attrition_summary$Mean <- round(attrition_summary$Mean, digits=2)
-colnames(attrition_summary) <- c("Minimum", "1st Quartile", "Median", "Mean", "3rd Quartile", "Maximum")
-
-kable(attrition_summary, row.names = T,
-      caption = "Statistics of People Who Left", 
-      table.attr="style='width:90%;'") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-
-ggplot(employee, aes(x=Age, y=MnthInc, color=Gender)) +
-  geom_point(alpha=0.3) +
-  xlab("Age (years)") +
-  ylab("Monthly Income ($)") +
-  ggtitle("Attrition, Age, & Monthly Income") +
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(hjust = 0.5)) +
-  facet_grid(. ~ Attrition)
-
-ggplot(employee, aes(x=YrsAtComp)) +
-  geom_histogram() +
-  xlab("Years at Company") +
-  ylab("Count") +
-  ggtitle("Attrition and Years at Company") +
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(hjust = 0.5)) +
-  facet_grid(Attrition ~ .)
-
-ggplot(employee, aes(x=YrsCurrRole)) +
-  geom_histogram() +
-  xlab("Years at Company") +
-  ylab("Count") +
-  ggtitle("Attrition and Years in Current Role") +
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(hjust = 0.5)) +
-  facet_grid(Attrition ~ .)
-
-ggplot(employee, aes(x=TotalWrkYrs)) +
-  geom_histogram() +
-  xlab("Total Working Years") +
-  ylab("Count") +
-  ggtitle("Attrition and Total Working Years") +
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(hjust = 0.5)) +
-  facet_grid(Attrition ~ .)
-
-ggplot(employee, aes(x=Attrition, y=Education, group=Attrition)) +
-  geom_boxplot() +
-  xlab("Attrition") +
-  ylab("Education Level") +
-  ggtitle("Attrition and Education") +
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(hjust = 0.5))
-
-prop.table(table(employee_numeric$Attrition, employee_numeric$MaritalStat))
-
-# Row-wise proportion of attrition by job role. Of those who left, 3/7/8/9 are most represented.
-prop.table(table(employee_numeric$Attrition, employee_numeric$JobRole), 1)
-
-# Row-wise proportions of attrition vs work-life balance. Slight increase in people with 'bad' (1) work-life balance among those who left.
-prop.table(table(employee_numeric$Attrition, employee_numeric$WorkLifeBal), 1)
-
-# Row-wise proportions of attrition vs job satisfaction. For those who left, slight decrease in 'very high' (4) reallocated to 'low' (1).
-prop.table(table(employee_numeric$Attrition, employee_numeric$JobSat), 1)
-
-# ggplot(employee, aes(x=StckOptLev, y=Attrition, fill=Attrition)) +
-#   geom_col(position="fill")
-mosaicplot(Attrition ~ StckOptLev, data = employee)
-# ggplot(employee_numeric) +
-#   geom_mosaic(aes(x=product(StckOptLev, Attrition), fill=StckOptLev), na.rm=T)
-
-```
-
-```{r attrition2}
-
-# Stratified sampling on Attrition.
-set.seed(307)
-train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.7, list=F)
-train_subset <- employee_factor[train_rows,]
-test_subset <- employee_factor[-train_rows,]
-
-# Create task.
-train_task <- makeClassifTask(data=train_subset, target="Attrition", positive="Yes")
-test_task <- makeClassifTask(data=test_subset, target="Attrition")
-
-train_task
-
-train_task <- normalizeFeatures(train_task, method="standardize")
-test_task <- normalizeFeatures(train_task, method="standardize")
-train_task <- dropFeatures(task=train_task, features=c("EmpId", "StandHours"))
-
-```
-#
-
-# 4. Deep Analysis
 
 ## 4c. Age and Income
 
@@ -446,6 +348,103 @@ ggplot(employee, aes(x=JobRole, y=WorkLifeBal)) +
   xlab("Job Role") +
   ylab("Work-Life Balance") +
   ggtitle("Work Life Balance by Job")
+
+```
+
+## Attrition
+
+```{r attrition1}
+
+attrition <- employee_numeric[employee_numeric$Attrition == 1, ]
+attrition_summary <- data.frame(do.call('rbind', lapply(attrition, function(x) if(is.numeric(x)) summary(x))))
+attrition_summary$Mean <- round(attrition_summary$Mean, digits=2)
+colnames(attrition_summary) <- c("Minimum", "1st Quartile", "Median", "Mean", "3rd Quartile", "Maximum")
+
+kable(attrition_summary, row.names = T,
+      caption = "Statistics of People Who Left", 
+      table.attr="style='width:90%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+ggplot(employee, aes(x=Age, y=MnthInc, color=Gender)) +
+  geom_point(alpha=0.3) +
+  xlab("Age (years)") +
+  ylab("Monthly Income ($)") +
+  ggtitle("Attrition, Age, & Monthly Income") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  facet_grid(. ~ Attrition)
+
+ggplot(employee, aes(x=YrsAtComp)) +
+  geom_histogram() +
+  xlab("Years at Company") +
+  ylab("Count") +
+  ggtitle("Attrition and Years at Company") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  facet_grid(Attrition ~ .)
+
+ggplot(employee, aes(x=YrsCurrRole)) +
+  geom_histogram() +
+  xlab("Years at Company") +
+  ylab("Count") +
+  ggtitle("Attrition and Years in Current Role") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  facet_grid(Attrition ~ .)
+
+ggplot(employee, aes(x=TotalWrkYrs)) +
+  geom_histogram() +
+  xlab("Total Working Years") +
+  ylab("Count") +
+  ggtitle("Attrition and Total Working Years") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  facet_grid(Attrition ~ .)
+
+ggplot(employee, aes(x=Attrition, y=Education, group=Attrition)) +
+  geom_boxplot() +
+  xlab("Attrition") +
+  ylab("Education Level") +
+  ggtitle("Attrition and Education") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5))
+
+prop.table(table(employee_numeric$Attrition, employee_numeric$MaritalStat))
+
+# Row-wise proportion of attrition by job role. Of those who left, 3/7/8/9 are most represented.
+prop.table(table(employee_numeric$Attrition, employee_numeric$JobRole), 1)
+
+# Row-wise proportions of attrition vs work-life balance. Slight increase in people with 'bad' (1) work-life balance among those who left.
+prop.table(table(employee_numeric$Attrition, employee_numeric$WorkLifeBal), 1)
+
+# Row-wise proportions of attrition vs job satisfaction. For those who left, slight decrease in 'very high' (4) reallocated to 'low' (1).
+prop.table(table(employee_numeric$Attrition, employee_numeric$JobSat), 1)
+
+# ggplot(employee, aes(x=StckOptLev, y=Attrition, fill=Attrition)) +
+#   geom_col(position="fill")
+mosaicplot(Attrition ~ StckOptLev, data = employee)
+# ggplot(employee_numeric) +
+#   geom_mosaic(aes(x=product(StckOptLev, Attrition), fill=StckOptLev), na.rm=T)
+
+```
+
+```{r attrition2}
+
+# Stratified sampling on Attrition.
+set.seed(307)
+train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.7, list=F)
+train_subset <- employee_factor[train_rows,]
+test_subset <- employee_factor[-train_rows,]
+
+# Create task.
+train_task <- makeClassifTask(data=train_subset, target="Attrition", positive="Yes")
+test_task <- makeClassifTask(data=test_subset, target="Attrition")
+
+train_task
+
+train_task <- normalizeFeatures(train_task, method="standardize")
+test_task <- normalizeFeatures(train_task, method="standardize")
+train_task <- dropFeatures(task=train_task, features=c("EmpId", "StandHours"))
 
 ```
 
