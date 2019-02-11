@@ -526,7 +526,7 @@ plot(employee_hclust)
 
 * Identify three factors contributing to turnover.
 ```{r prediction}
-ourPredict(employee)
+#ourPredict(employee)
 ```
 * Identify any existing job-specific trends.
 * Other considerations, such as next steps or other variables needed.
