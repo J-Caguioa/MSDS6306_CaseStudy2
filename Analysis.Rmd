@@ -17,7 +17,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 999)
 
-package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic", "magrittr", "caret")
+package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic", "magrittr", "caret", "randomForest")
 lapply(package_list, library, character.only=T)
 
 theme_set(theme_bw())
@@ -450,6 +450,55 @@ mosaicplot(Attrition ~ StckOptLev, data = employee)
 
 ```
 
+```{r glm}
+
+drop <- c("EmpCount", "EmpID", "Over18", "StandHours")
+employee_factor <- employee_factor[ , !(names(employee_factor) %in% drop)]
+
+set.seed(307)
+train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.7, list=F)
+train_subset <- employee_factor[train_rows,]
+test_subset <- employee_factor[-train_rows,]
+
+employee_glm <- glm(Attrition~., data=employee_factor, family="binomial")
+summary(employee_glm)
+imp <- as.data.frame(varImp(employee_glm))
+imp <- data.frame(overall = imp$Overall, names=rownames(imp))
+imp[order(imp$overall, decreasing=T),]
+
+train_glm <- glm(Attrition~., data=train_subset, family="binomial")
+summary(train_glm)
+imp <- as.data.frame(varImp(train_glm))
+imp <- data.frame(overall = imp$Overall, names=rownames(imp))
+imp[order(imp$overall, decreasing=T),]
+
+prob <- predict(train_glm, test_subset, type="response")
+test_subset$Pred <- ifelse(prob > 0.141, "Yes", "No")
+mean(test_subset$Pred == test_subset$Attrition)
+
+```
+
+```{r stepwise}
+
+employee_null <- glm(Attrition ~ 1, data=employee_factor, family="binomial")
+employee_full <- glm(Attrition ~ ., data=employee_factor, family="binomial")
+employee_step <- step(employee_null, scope=list(lower=employee_null, upper=employee_full), direction="forward")
+step_prob <- predict(employee_step, type="response")
+
+```
+
+Top via AIC: YrsAtcomp (603.37), YrsCurrRole (604.13), MnthRate (604.18), PerfRating (604.25), Age (604.51)
+Invalidate the above. Need to change to using version of employee_factor with certain variables dropped.
+
+```{r decision_trees}
+
+employee_rf <- randomForest(Attrition ~ ., data=train_subset, ntree=500, mtry=sqrt(ncol(train_subset)))
+summary(employee_rf)
+plot(employee_rf)
+print(employee_rf)
+
+```
+
 ## 4d. Life Satisfaction
 
 One potential starting point involves using variables with the word "satisfaction" in their name:
@@ -458,11 +507,18 @@ One potential starting point involves using variables with the word "satisfactio
 * Job Satisfaction
 * Relationship Satisfaction
 
-Perhaps monthly income should also be considered.
+Other sensible factors to consider include Business Travel, Job Involvement, Marital Status, Montly Income, and Work Life Balance.
 
 ```{r life-satisfaction}
 
 # Can life satisfaction be defined?
+
+satisfy_var <- c("Age", "Attrition", "BusTravel", "EnvironSat", "JobInvolvemt", "JobSat", "MaritalStat", "MnthInc", "RelationSat", "TotalWrkYrs", "WorkLifeBal")
+employee_satisfaction <- employee_factor[ , (names(employee_factor) %in% satisfy_var)]
+dist_matrix <- dist(employee_satisfaction)
+employee_hclust <- hclust(d = dist_matrix)
+cutree(employee_hclust, h=6)
+plot(employee_hclust)
 
 ```
 
