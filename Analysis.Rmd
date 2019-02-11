@@ -22,6 +22,8 @@ lapply(package_list, library, character.only=T)
 
 theme_set(theme_bw())
 
+source('src/MLR-2.R')
+
 ```
 
 # Introduction
@@ -430,21 +432,21 @@ mosaicplot(Attrition ~ StckOptLev, data = employee)
 
 ```{r attrition2}
 
-# Stratified sampling on Attrition.
-set.seed(307)
-train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.7, list=F)
-train_subset <- employee_factor[train_rows,]
-test_subset <- employee_factor[-train_rows,]
-
-# Create task.
-train_task <- makeClassifTask(data=train_subset, target="Attrition", positive="Yes")
-test_task <- makeClassifTask(data=test_subset, target="Attrition")
-
-train_task
-
-train_task <- normalizeFeatures(train_task, method="standardize")
-test_task <- normalizeFeatures(train_task, method="standardize")
-train_task <- dropFeatures(task=train_task, features=c("EmpId", "StandHours"))
+# # Stratified sampling on Attrition.
+# set.seed(307)
+# train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.7, list=F)
+# train_subset <- employee_factor[train_rows,]
+# test_subset <- employee_factor[-train_rows,]
+# 
+# # Create task.
+# train_task <- makeClassifTask(data=train_subset, target="Attrition", positive="Yes")
+# test_task <- makeClassifTask(data=test_subset, target="Attrition")
+# 
+# train_task
+# 
+# train_task <- normalizeFeatures(train_task, method="standardize")
+# test_task <- normalizeFeatures(train_task, method="standardize")
+# train_task <- dropFeatures(task=train_task, features=c("EmpId", "StandHours"))
 
 ```
 
@@ -467,5 +469,8 @@ Perhaps monthly income should also be considered.
 # Conclusion
 
 * Identify three factors contributing to turnover.
+```{r prediction}
+ourPredict(employee)
+```
 * Identify any existing job-specific trends.
 * Other considerations, such as next steps or other variables needed.
