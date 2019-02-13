@@ -476,6 +476,8 @@ prob <- predict(train_glm, test_subset, type="response")
 test_subset$Pred <- ifelse(prob > 0.141, "Yes", "No")
 mean(test_subset$Pred == test_subset$Attrition)
 
+
+
 ```
 
 ```{r stepwise}
@@ -501,24 +503,54 @@ print(employee_rf)
 
 ## 4d. Life Satisfaction
 
-One potential starting point involves using variables with the word "satisfaction" in their name:
+One final question of interest posed is whether life satisfaction can be related to this data set. None of the original 35 variables directly address life satisfaction (i.e., the employees were not explicitly asked to rate life satisfaction). Furthermore, criteria for life satisfaction likely varies between employees and some may not even be captured by any of the available variables (e.g., quality of relationships with family and friends, status of physical and mental health, etc). Therefore, the following analysis using the original data set is purely speculative. 
 
-* Environment Satisfaction
-* Job Satisfaction
-* Relationship Satisfaction
+The three variables containing "satisfaction" in their name (Environment Satisfaction, Job Satisfaction, and Relationship Satisfaction) provide a reasonable starting point. Work Life Balance also seems sound. Incidentally, these are all variables in which employees were asked to rate their feelings on a scale of 1 to 4.
 
-Other sensible factors to consider include Business Travel, Job Involvement, Marital Status, Montly Income, and Work Life Balance.
+If career success were a major contributor to life satisfaction, several of the available variables may be useful. Education, Job Level, Monthly Income, and Total Working Years may capture some general job progression.
 
-```{r life-satisfaction}
+```{r life-satisfaction1, message=F, results="hide", warning=F}
 
-# Can life satisfaction be defined?
+# satisfy_var <- c("Age", "Attrition", "BusTravel", "EnvironSat", "JobInvolvemt", "JobSat", "MaritalStat", "MnthInc", "RelationSat", "TotalWrkYrs", "WorkLifeBal")
+# employee_satisfaction <- employee_factor[ , (names(employee_factor) %in% satisfy_var)]
+# dist_matrix <- dist(employee_satisfaction)
+# employee_hclust <- hclust(d = dist_matrix)
+# cutree(employee_hclust, h=6)
+# plot(employee_hclust)
 
-satisfy_var <- c("Age", "Attrition", "BusTravel", "EnvironSat", "JobInvolvemt", "JobSat", "MaritalStat", "MnthInc", "RelationSat", "TotalWrkYrs", "WorkLifeBal")
-employee_satisfaction <- employee_factor[ , (names(employee_factor) %in% satisfy_var)]
-dist_matrix <- dist(employee_satisfaction)
-employee_hclust <- hclust(d = dist_matrix)
-cutree(employee_hclust, h=6)
-plot(employee_hclust)
+```
+
+```{r life-satisfaction2}
+
+# Add numeric columns for Likert scale-type variables.
+copyAsNumeric <- function(df, cols) {
+  newNumeric <- vector()
+  for (col in cols) {
+    colNum <- paste0(col, "Num")
+    df[, (colNum)] <- as.numeric(col)
+    newNumeric <- c(newNumeric, as.character(colNum))
+  }
+  return(newNumeric)
+}
+
+copyAsNumeric(employee_factor, c("EnvironSat", "JobSat", "RelationSat", "WorkLifeBal"))
+
+# Create Life Satisfaction variable from 
+employee_factor$LifeSat <- rowMeans(employee_factor[ , newNumeric])
+                                                     #c("EnvironSatNum", "JobSatNum", "RelationSatNum", "WorkLifeBalNum")])
+
+ggplot(employee_factor, aes(x=Age, y=LifeSat)) +
+  geom_point(alpha=0.3) +
+  xlab("Age (years)") +
+  ylab("Life Satisfaction") +
+  ggtitle("Life Satisfaction Tester") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  geom_smooth(method = "lm",
+              se = F,
+              level = 0.95)
+#  facet_grid(. ~ WorkLifeBal)
+
 
 ```
 
