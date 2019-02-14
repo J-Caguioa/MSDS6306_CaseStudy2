@@ -52,22 +52,24 @@ kable(employee_dim, col.names = "Size", row.names = T,
 
 The data set contains observations on 1,470 employees with information on 35 variables.
 
-```{r load2}
+```{r load2, message=F, warning=F}
 
 # Modify column names. All names less than 12 characters. [#2B]
 renamed <- read_excel('Data/VariableNames.xlsx')
 colnames(employee) <- renamed$`Modified_Name`
 
 # Convert column types. [#2D]
-# factorize <- c("Attrition", "BusinessTravel", "Department", "EducationField", "EnvironmentSatisfaction", "Gender", "JobInvolvement", "JobLevel", "JobRole", "JobSatisfaction", "MaritalStatus", "Over18", "OverTime", "PerformanceRating", "RelationshipSatisfaction", "WorkLifeBalance")
-# employee[factorize] <- lapply(employee[factorize], as.factor)
+employee_factor <- data.frame(employee)
+employee_factor <- employee_factor %>% mutate_if(is.character, as.factor)
+factor_cols <- c("Education", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StandHours", "StckOptLev", "WorkLifeBal")
+employee_factor %<>% mutate_each(funs(factor(.)), factor_cols)
 
-# Another option that converts all to numeric.
-# employee <- employee %>% 
-#   mutate_if(is.character, as.factor) %>% 
-#   mutate_if(is.factor, as.numeric) 
+employee_numeric <- data.frame(employee_factor)
+employee_numeric %<>% mutate_if(is.factor, as.numeric)
 
 ```
+
+Two versions of the original employee data frame are created. One converts all character variables and select rating-type numeric variables to factors. The other goes a step further and coerces all variables to numeric. Both are used in different ways during the analysis.
 
 # 3. Preliminary Analysis
 
@@ -83,8 +85,8 @@ count(employee, "Over18")
 
 The number of "Y" entries for the "Over18" variable agrees with the total number of observations, 1,470. The minimum age, 18, confirms that there are no underage employees in the data set. 
 
-
 ## 3b. Descriptive stats
+
 ```{r descriptive,echo=TRUE}
 # Descriptive statistics (7) and histograms (2) for interesting variables. [#3B]
 # Age, MnthInc, PcntSalInc, YrsAtComp, YrsCurrRole, YrsSncPromo, YrsWtCurMgr
@@ -190,11 +192,6 @@ manager
 employee_numeric <- data.frame(employee)
 employee_numeric$Attrition <- ifelse(employee_numeric$Attrition == "Yes", 1, 0)
 employee_numeric <- employee_numeric %>% mutate_if(is.character, as.factor) %>% mutate_if(is.factor, as.numeric)
-
-employee_factor <- data.frame(employee)
-employee_factor <- employee_factor %>% mutate_if(is.character, as.factor)
-factor_cols <- c("Education", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StandHours", "StckOptLev", "WorkLifeBal")
-employee_factor %<>% mutate_each_(funs(factor(.)), factor_cols)
 
 # Percent of employees who left.
 mean(employee_numeric$Attrition)
@@ -302,6 +299,67 @@ ggplot(employee, aes(x=YrsAtComp, y=MnthInc)) +
   geom_point()
 
 ```
+
+## Rates & Income
+
+```{r rate-income1}
+
+logvar <- function(df, cols) {
+  for (col in cols) {
+    name_log <- paste0(col, "Log")
+    df[, (name_log)] <- log(df[, col])
+  }
+  return(df)
+}
+
+employee_numeric$HourRateLog <- log(employee_numeric$HourlyRate)
+employee_numeric$DayRateLog <- log(employee_numeric$DailyRate)
+employee_numeric$MonthRateLog <- log(employee_numeric$MnthRate)
+employee_numeric$MonthIncLog <- log(employee_numeric$MnthInc)
+
+#logvar(employee_numeric, c("HourlyRate", "DailyRate", "MnthRate", "MnthInc"))
+
+ggplot(employee_factor, aes(x=HourlyRate, y=DailyRate)) +
+  geom_point()
+
+ggplot(employee_factor, aes(x=HourlyRate, y=MnthRate)) +
+  geom_point()
+
+ggplot(employee_factor, aes(x=HourlyRate, y=MnthInc)) +
+  geom_point()
+
+ggplot(employee_factor, aes(x=MnthRate, y=MnthInc)) +
+  geom_point()
+
+ggplot(employee_factor, aes(x=HourlyRate, y=MnthInc)) +
+  geom_point()
+
+pairs(~HourlyRate+DailyRate+MnthRate+MnthInc, data=employee_factor)
+
+rate_lm <- lm(MnthInc ~ HourlyRate + DailyRate + MnthRate, employee_factor)
+summary(rate_lm)
+
+cor(employee_factor$HourlyRate, employee_factor$DailyRate)
+cor(employee_factor$HourlyRate, employee_factor$MnthRate)
+cor(employee_factor$HourlyRate, employee_factor$MnthInc)
+cor(employee_factor$MnthRate, employee_factor$MnthInc)
+
+pairs(~HourRateLog+DayRateLog+MonthRateLog+MonthIncLog, data=employee_numeric)
+
+```
+
+```{r rate-income2}
+
+mean(employee_numeric$HourlyRate < employee_numeric$DailyRate)
+mean(employee_numeric$HourlyRate < employee_numeric$MnthRate)
+mean(employee_numeric$HourlyRate < employee_numeric$MnthInc)
+mean(employee_numeric$MnthRate > employee_numeric$MnthInc)
+
+summary(employee_factor[which(employee_factor$MnthRate < employee_factor$MnthInc), ])
+
+```
+
+For all observations, Monthly Rate is greater than Daily Rate, which is greater than Hourly Rate. However, only 82.4% of the observations have Monthly Rate greater than Monthly Income.
 
 ## Job-Specific Trends
 
@@ -522,24 +580,12 @@ If career success were a major contributor to life satisfaction, several of the 
 
 ```{r life-satisfaction2}
 
-# Add numeric columns for Likert scale-type variables.
-copyAsNumeric <- function(df, cols) {
-  newNumeric <- vector()
-  for (col in cols) {
-    colNum <- paste0(col, "Num")
-    df[, (colNum)] <- as.numeric(col)
-    newNumeric <- c(newNumeric, as.character(colNum))
-  }
-  return(newNumeric)
-}
+# Collect variables used to calculate life satisfaction. Then, aggregate them to create Life Satisfaction variable.
+satisfaction <- c("EnvironSat", "JobSat", "RelationSat", "WorkLifeBal")
+employee_numeric$LifeSat <- rowMeans(employee_numeric[ , satisfaction])
 
-copyAsNumeric(employee_factor, c("EnvironSat", "JobSat", "RelationSat", "WorkLifeBal"))
 
-# Create Life Satisfaction variable from 
-employee_factor$LifeSat <- rowMeans(employee_factor[ , newNumeric])
-                                                     #c("EnvironSatNum", "JobSatNum", "RelationSatNum", "WorkLifeBalNum")])
-
-ggplot(employee_factor, aes(x=Age, y=LifeSat)) +
+ggplot(employee_numeric, aes(x=Age, y=LifeSat)) +
   geom_point(alpha=0.3) +
   xlab("Age (years)") +
   ylab("Life Satisfaction") +
@@ -549,8 +595,17 @@ ggplot(employee_factor, aes(x=Age, y=LifeSat)) +
   geom_smooth(method = "lm",
               se = F,
               level = 0.95)
-#  facet_grid(. ~ WorkLifeBal)
 
+ggplot(employee_numeric, aes(x=MnthInc, y=LifeSat)) +
+  geom_point(alpha=0.3) +
+  xlab("Monthly Income") +
+  ylab("Life Satisfaction") +
+  ggtitle("Life Satisfaction Tester") +
+  theme(axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5)) +
+  geom_smooth(method = "lm",
+              se = F,
+              level = 0.95)
 
 ```
 
