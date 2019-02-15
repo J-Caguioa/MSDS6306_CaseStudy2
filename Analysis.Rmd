@@ -17,7 +17,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 999)
 
-package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic", "magrittr", "caret", "randomForest")
+package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic", "magrittr", "caret", "randomForest", "reshape", "gridExtra", "GGally")
 lapply(package_list, library, character.only=T)
 
 theme_set(theme_bw())
@@ -302,112 +302,72 @@ ggplot(employee, aes(x=YrsAtComp, y=MnthInc)) +
 
 ## Rates & Income
 
-```{r rate-income1}
+The data set contains four variables related to money: Hourly Rate, Daily Rate, Monthly Rate, and Monthly Income. Their data definitions are not well-defined, but it can be reasonably assumed that the "Rate" variables relate to wages earned over the indicated unit of time and the "Income" variable translates to monthly take-home pay. If this is the case, can a model can be built to describe the relationship between them?
 
-logvar <- function(df, cols) {
-  for (col in cols) {
-    name_log <- paste0(col, "Log")
-    df[, (name_log)] <- log(df[, col])
-  }
-  return(df)
-}
+```{r rate-income1, message=F, warning=F}
 
-employee_numeric$HourRateLog <- log(employee_numeric$HourlyRate)
-employee_numeric$DayRateLog <- log(employee_numeric$DailyRate)
-employee_numeric$MonthRateLog <- log(employee_numeric$MnthRate)
-employee_numeric$MonthIncLog <- log(employee_numeric$MnthInc)
-
-#logvar(employee_numeric, c("HourlyRate", "DailyRate", "MnthRate", "MnthInc"))
-
-ggplot(employee_factor, aes(x=HourlyRate, y=DailyRate)) +
-  geom_point()
-
-ggplot(employee_factor, aes(x=HourlyRate, y=MnthRate)) +
-  geom_point()
-
-ggplot(employee_factor, aes(x=HourlyRate, y=MnthInc)) +
-  geom_point()
-
-ggplot(employee_factor, aes(x=MnthRate, y=MnthInc)) +
-  geom_point()
-
-ggplot(employee_factor, aes(x=HourlyRate, y=MnthInc)) +
-  geom_point()
-
-pairs(~HourlyRate+DailyRate+MnthRate+MnthInc, data=employee_factor)
-
-rate_lm <- lm(MnthInc ~ HourlyRate + DailyRate + MnthRate, employee_factor)
-summary(rate_lm)
-
-cor(employee_factor$HourlyRate, employee_factor$DailyRate)
-cor(employee_factor$HourlyRate, employee_factor$MnthRate)
-cor(employee_factor$HourlyRate, employee_factor$MnthInc)
-cor(employee_factor$MnthRate, employee_factor$MnthInc)
-
-pairs(~HourRateLog+DayRateLog+MonthRateLog+MonthIncLog, data=employee_numeric)
+# Visualize relationship between rates and income.
+ggpairs(employee_factor, aes(color=Attrition, alpha=0.1), 
+        columns=c("HourlyRate", "DailyRate", "MnthRate", "MnthInc"),
+        title="Correlation Matrix for Monetary Variables and Attrition",
+        axisLabels="none",
+        upper=list(continuous=wrap("cor", size=3, hjust=0.8)))
 
 ```
+
+Scatterplots of the rates and income variables against each other do not show any discernible relationship; the correlation values, being near zero, would suggest that no relationship exists at all. This is an unexpected result, as one would expect that these variables would trend together. Perhaps another variable not captured by the data, or the survey method by which the data was collected from employees, is responsible.
+
+Another oddity reveals itself when we compare the minimum and maximum values for each variable.
 
 ```{r rate-income2}
 
-mean(employee_numeric$HourlyRate < employee_numeric$DailyRate)
-mean(employee_numeric$HourlyRate < employee_numeric$MnthRate)
-mean(employee_numeric$HourlyRate < employee_numeric$MnthInc)
-mean(employee_numeric$MnthRate > employee_numeric$MnthInc)
+# Divide data based on which of Monthly Income and Rate is greater.
+MnthIncGreater <- summary(employee_factor[which(employee_factor$MnthRate < employee_factor$MnthInc), ])
+MnthRateGreater <- summary(employee_factor[which(employee_factor$MnthRate > employee_factor$MnthInc), ])
 
-summary(employee_factor[which(employee_factor$MnthRate < employee_factor$MnthInc), ])
+# Display lower and upper bounds for each category.
+employee_money <- data.frame(rbind(c(min(employee_numeric$HourlyRate), max(employee_numeric$HourlyRate)),
+                                   c(min(employee_numeric$DailyRate), max(employee_numeric$DailyRate)),
+                                   c(min(employee_numeric$MnthRate), max(employee_numeric$MnthRate)),
+                                   c(min(employee_numeric$MnthInc), max(employee_numeric$MnthInc))))
+row.names(employee_money) <- c("Hourly Rate", "Daily Rate", "Monthly Rate", "Monthly Income")
+colnames(employee_money) <- c("Minimum", "Maximum")
+kable(employee_money,
+      col.names = c("Minimum", "Maximum"),
+      row.names = T,
+      caption="Rates & Income Bounds",
+      table.attr="style='width:30%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
 ```
 
-For all observations, Monthly Rate is greater than Daily Rate, which is greater than Hourly Rate. However, only 82.4% of the observations have Monthly Rate greater than Monthly Income.
+For all observations, Monthly Rate is greater than Daily Rate, which in turn is greater than Hourly Rate. This is expected. However, Monthly Rate is greater than Monthly Income for only `r round(mean(employee_numeric$MnthRate > employee_numeric$MnthInc) * 100, digits=2)`% of the observations; in other words, 258 of the 1,470 employees reported a greater Monthly Income than Monthly Rate. Assuming the above interpretation of rate as pre-deduction and income as post-deduction earnings is accurate, why might this be?
 
 ## Job-Specific Trends
 
 ```{r job-role}
 
 # Relationship between job role and income.
-ggplot(employee, aes(x=JobRole, y=MnthInc, group=JobRole)) +
-  geom_boxplot() +
-  coord_flip() +
-  xlab("Job Role") +
-  ylab("Monthly Income ($)") +
-  ggtitle("Monthly Income by Job")
+job_income <- ggplot(employee, aes(x=JobRole, y=MnthInc, group=JobRole)) +
+  geom_boxplot() + coord_flip() +
+  xlab("Job Role") + ylab("Monthly Income ($)") + ggtitle("Monthly Income by Job")
+job_years_co <- ggplot(employee, aes(x=JobRole, y=YrsAtComp, group=JobRole)) +
+  geom_boxplot() + coord_flip() +
+  xlab("Job Role") + ylab("Years at Current Company") + ggtitle("Years with Current Employer by Job")
+job_co_worked <- ggplot(employee, aes(x=JobRole, y=NumCoWorked, group=JobRole)) +
+  geom_boxplot() + coord_flip() +
+  xlab("Job Role") + ylab("Number of Companies Worked") + ylim(c(0,10)) + ggtitle("Work History by Job")
+job_sat <- ggplot(employee, aes(x=JobRole, y=JobSat)) +
+  geom_boxplot() + coord_flip() +
+  xlab("Job Role") + ylab("Job Satisfaction") + ggtitle("Job Satisfaction by Role")
+job_salinc <- ggplot(employee, aes(x=JobRole, y=PcntSalInc)) +
+  geom_boxplot() + coord_flip() +
+  xlab("Job Role") + ylab("Percent Salary Increase") + ggtitle("Yearly Raise by Job")
+job_bal <- ggplot(employee, aes(x=JobRole, y=WorkLifeBal)) +
+  geom_jitter(alpha=0.3) + coord_flip() +
+  xlab("Job Role") + ylab("Work-Life Balance") + ggtitle("Work Life Balance by Job")
 
-ggplot(employee, aes(x=JobRole, y=YrsAtComp, group=JobRole)) +
-  geom_boxplot() +
-  coord_flip() +
-  xlab("Job Role") +
-  ylab("Years at Current Company") +
-  ggtitle("Years with Current Employer by Job")
-
-ggplot(employee, aes(x=JobRole, y=NumCoWorked, group=JobRole)) +
-  geom_boxplot() +
-  coord_flip() +
-  xlab("Job Role") +
-  ylab("Number of Companies Worked") +
-  ylim(c(0,10))
-  ggtitle("Work History by Job")
-  
-ggplot(employee, aes(x=JobRole, y=JobSat)) +
-  geom_boxplot() +
-  coord_flip() +
-  xlab("Job Role") +
-  ylab("Job Satisfaction") +
-  ggtitle("Job Satisfaction by Role")
-
-ggplot(employee, aes(x=JobRole, y=PcntSalInc)) +
-  geom_boxplot() +
-  coord_flip() +
-  xlab("Job Role") +
-  ylab("Percent Salary Increase") +
-  ggtitle("Yearly Raise by Job")
-
-ggplot(employee, aes(x=JobRole, y=WorkLifeBal)) +
-  geom_jitter(alpha=0.3) +
-  coord_flip() +
-  xlab("Job Role") +
-  ylab("Work-Life Balance") +
-  ggtitle("Work Life Balance by Job")
+grid.arrange(job_income, job_years_co, job_co_worked, job_sat, job_salinc, job_bal, ncol=3)
 
 ```
 
