@@ -157,19 +157,10 @@ names(EducationData)<-c("Below College", "College", "Bachelor", "Master", "Docto
 kable(EducationData,
       col.names = c("Education Level", "Count"),
       row.names = T,
-      caption="Headcout by Education",
+      caption="Headcount by Education",
       table.attr="style='width:30%;'") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
-
-JobRoleData <- data.frame(table(employee$JobRole))
-names(JobRoleData) <- c("Job Roles", "Count")
-kable(JobRoleData,
-      col.names = c("Job Role", "Count"),
-      row.names = T,
-      caption="Headcout by Job Role",
-      table.attr="style='width:50%;'") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
 ```
 
@@ -177,9 +168,16 @@ kable(JobRoleData,
 
 ```{r management}
 
-manager <- data.frame(JobRoleData[4:6,])
-manager
-
+managerRoles<-c("Manager", "Manufacturing Director", "Research Director")
+ManagerRoleData<- employee[employee$JobRole %in% managerRoles, ]
+ManagerRoleData <- data.frame(table(ManagerRoleData$JobRole))
+names(ManagerRoleData) <- c("JobRoles", "Count")
+kable(ManagerRoleData,
+      col.names = c("Job Role", "Count"),
+      row.names = T,
+      caption="Headcount by Manager Role",
+      table.attr="style='width:50%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
 # 4. Deep Analysis
