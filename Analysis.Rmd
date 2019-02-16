@@ -59,7 +59,7 @@ colnames(employee) <- renamed$`Modified_Name`
 # Convert column types. [#2D]
 employee_factor <- data.frame(employee)
 employee_factor <- employee_factor %>% mutate_if(is.character, as.factor)
-factor_cols <- c("Education", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StandHours", "StckOptLev", "WorkLifeBal")
+factor_cols <- c("Education", "EmpCount", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StandHours", "StckOptLev", "WorkLifeBal")
 employee_factor %<>% mutate_each(funs(factor(.)), factor_cols)
 
 employee_numeric <- data.frame(employee_factor)
@@ -71,6 +71,7 @@ Two versions of the original employee data frame are created. One converts all c
 
 ```{r eda-plots1, message=F, warning=F}
 
+# Exploratory histograms of continuous variables.
 employee_factor %>%
   keep(is.numeric) %>%
   gather() %>%
@@ -81,45 +82,60 @@ employee_factor %>%
 
 ```
 
+Quick exploratory plots of all 35 variables on all of the data reveal some useful tidbits right off the bat. The histogram shapes alone show some interesting trends.
+
+* Distance From Home, Percent Salary Increase, Total Working Years, Years At Company, Years In Current Role, Years Since Last Promotion, and Years With Current Manager have similar positively skewed distributions with long right tails. Some of these variables are likely correlated with each other.
+* Employee ID has a maximum value above 2000. The data set contains only 1,470 observations, meaning this may be a subset where other employee data has already been removed.
+
 ```{r eda-plots2, message=F, warning=F}
 
+# Exploratory bar graphs of factor variables.
 employee_factor %>%
   keep(is.factor) %>%
   gather() %>%
   ggplot(aes(value)) +
     facet_wrap(~ key, scales="free") +
     geom_bar() +
-    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1))
+    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=6))
 
 ```
 
-Quick exploratory plots of all 35 variables on all of the data reveal some interesting tidbits right off the bat.
+The exploratory bar graphs are similarly informative.
 
-* Employee ID has a maximum value above 2000. The data set contains only 1,470 observations, meaning this could potentially be a subset where other employee data has already been removed.
-* Over 18 is Yes for all employees (as shown later, some employees are 18).
+* Department shows that most employees are in Research & Development, followed by Sales. On a related note, Job Role shows most employees are Sales Executives, Research Scientists, or Laboratory Technicians; Education Field shows most have a background in Life Sciences or Medical. Job Level for most is 1 or 2.
+* Employee Count 1 for all employees in the data set because each row corresponds to answers for only one employee.
+* Environment Satisfacion, Job Satisfaction, and Relationship Satisfaction have noticeable proportions of dissatisfied employees.
+* Over 18 is Yes for all employees (including employees who are 18 years old).
 * Performance Rating, defined on a scale of 1 to 4, only has scores of 3 and 4 represented.
 * Standard Hours is 80 for all employees in the data set. Assuming a standard 40-hour workweek, all of the represented companies use bi-weekly paychecks.
-* Total Working Years, Years At Company, Years In Current Role, Years Since Last Promotion, and Years With Current Manager have similar positively skewed distributions with long right tails. Some of these variables are likely correlated with each other.
 
+```{r na}
 
-
-# 3. Preliminary Analysis
-
-
-
-
-
-## 3a. Remove all under 18
-
-```{r underage}
-
-# Remove <18-year-olds. [#3A]
-summary(employee$Age)
-count(employee, "Over18")
+# Has the Qualtrics system introduced any errors? [#2C]
+colSums(is.na(employee_factor))
 
 ```
 
-The number of "Y" entries for the "Over18" variable agrees with the total number of observations, 1,470. The minimum age, 18, confirms that there are no underage employees in the data set. 
+None of the quick graphs above threw any errors indicating that missing errors were removed before plotting. There are no NA values for any variable. Furthermore, there are no outliers that could indicate entry errors.
+
+```{r drop}
+
+# Remove <18-year-olds. [#3A]
+count(employee, "Over18")
+
+# Remove unnecessary variables.
+drop <- c("EmpCount", "EmpId", "Over18", "StandHours")
+employee_factor <- employee_factor[ , !(names(employee_factor) %in% drop)]
+employee_numeric <- employee_numeric[ , !(names(employee_numeric) %in% drop)]
+
+```
+
+As shown in the bar graph above, the Over 18 variable indicates that all employees are at least 18 years old. Furthermore, its total count matches the total number of observations. The minimum age (shown below), 18, confirms that there are no underage employees in the data set.
+
+Before proceeding further, any variables with no variation (Employee Count, Over 18, and Standard Hours) can be removed because they have no more useful information. Employee ID can also be removed because observations can be tracked by other means. This results in a data frame of 1,470 rows and 31 columns.
+
+# 3. Preliminary Analysis
 
 ## 3b. Descriptive stats
 
@@ -174,7 +190,7 @@ ggIncome = ggIncome +labs(title="Histogram for Income", x="Income", y="Density")
 ggIncome
 ```
 
-## 3c. Frequencies on Gender, Education Occupation
+## 3c. Frequencies on Gender, Education, Occupation
 
 ```{r frequencies}
 
@@ -222,9 +238,7 @@ kable(ManagerRoleData,
 
 ``` {r correlations1, warning=F}
 
-
-
-# Dirty correlogram to show correlating variables for further investigation.
+# Show correlating variables for further investigation.
 corrplot(cor(employee_numeric), type = "upper", tl.col = "black", tl.srt = 45, tl.cex = 0.5, number.cex = 0.3)
 
 ```
@@ -377,13 +391,49 @@ For all observations, Monthly Rate is greater than Daily Rate, which in turn is 
 
 ```{r job-role}
 
-# Relationship between job role and income.
-job_income <- ggplot(employee, aes(x=JobRole, y=MnthInc, group=JobRole)) +
-  geom_boxplot() + coord_flip() +
-  xlab("Job Role") + ylab("Monthly Income ($)") + ggtitle("Monthly Income by Job")
-job_years_co <- ggplot(employee, aes(x=JobRole, y=YrsAtComp, group=JobRole)) +
-  geom_boxplot() + coord_flip() +
-  xlab("Job Role") + ylab("Years at Current Company") + ggtitle("Years with Current Employer by Job")
+# Relationship between job role and monthly income.
+job_mnthinc <- employee_factor %>%
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=MnthInc, group=JobRole, fill=JobRole)) +
+  geom_boxplot() + 
+  coord_flip() +
+  ylab("Monthly Income ($)") + 
+  scale_fill_brewer(palette="Paired") +
+  theme(axis.text.x=element_text(size=6, angle=45, vjust=1, hjust=1),
+        axis.text.y=element_text(size=6),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank(),
+        legend.position="none")
+
+# Relationship between job role and years at current company.
+job_yearscomp <- employee_factor %>%
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=YrsAtComp, group=JobRole)) +
+  geom_boxplot() +
+  coord_flip() +
+  ylab("Years at Current Company") +
+  scale_fill_brewer(palette="Paired") +
+  theme(axis.text.x=element_text(size=6, angle=45, vjust=1, hjust=1),
+        axis.text.y=element_text(size=6),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank(),
+        legend.position="none")  
+
+
+# Relationship between job role and attrition.
+job_att <- ggplot(employee_factor, aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
+  geom_bar(aes(fill=Attrition), position="fill") +
+  coord_flip() +
+  ylab("Percentage") +
+  scale_fill_manual("Attrition", values=c("Yes"="indianred3", "No"="seagreen3")) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
+
+
+# Relationship between job role and job satisfaction.
 job_co_worked <- ggplot(employee, aes(x=JobRole, y=NumCoWorked, group=JobRole)) +
   geom_boxplot() + coord_flip() +
   xlab("Job Role") + ylab("Number of Companies Worked") + ylim(c(0,10)) + ggtitle("Work History by Job")
@@ -397,7 +447,105 @@ job_bal <- ggplot(employee, aes(x=JobRole, y=WorkLifeBal)) +
   geom_jitter(alpha=0.3) + coord_flip() +
   xlab("Job Role") + ylab("Work-Life Balance") + ggtitle("Work Life Balance by Job")
 
-grid.arrange(job_income, job_years_co, job_co_worked, job_sat, job_salinc, job_bal, ncol=2)
+grid.arrange(job_mnthinc, job_yearscomp, job_co_worked, job_sat, job_salinc, job_bal, ncol=2)
+
+job_att
+```
+
+```{r job-stackedbars}
+
+# employee_factor %>% 
+#   mutate(BusTravel=fct_relevel(BusTravel,"Non-Travel", "Travel_Rarely", "Travel_Frequently")) %>% 
+#   ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
+#   geom_bar(aes(fill=BusTravel), position="fill") +
+#   coord_flip() +
+#   ylab("Percentage") +
+#   scale_color_distiller(palette="RdPu") +
+# #  scale_fill_manual("Attrition", values=c("No"="seagreen3", "Yes"="indianred3")) +
+#   theme(axis.text.x=element_text(size=8),
+#         axis.text.y=element_text(size=8),
+#         axis.ticks.y = element_blank(),
+#         axis.title.x = element_text(size=10),
+#         axis.title.y = element_blank())
+
+# Reusable Likert scale colors.
+likert <- c("1"="indianred3", "2"="bisque1", "3"="olivedrab3", "4"="springgreen3")
+
+# Relationship between job role and environment satisfaction.
+job_envsat <- employee_factor %>% 
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
+  geom_bar(aes(fill=EnvironSat), position=position_fill(reverse=T)) +
+  coord_flip() +
+  ylab("Cumulative Proportion") +
+  scale_fill_manual("Job Satisfaction", values=likert) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank(),
+        legend.position="top")
+
+# Relationship between job role and job satisfaction.
+job_jobsat <- employee_factor %>% 
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
+  geom_bar(aes(fill=JobSat), position=position_fill(reverse=T)) +
+  coord_flip() +
+  ylab("Cumulative Proportion") +
+  scale_fill_manual("Job Satisfaction", values=likert) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank(),
+        legend.position="top")
+
+# Relationship between job role and relationship satisfaction.
+job_relsat <- employee_factor %>% 
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
+  geom_bar(aes(fill=RelationSat), position=position_fill(reverse=T)) +
+  coord_flip() +
+  ylab("Cumulative Proportion") +
+  scale_fill_manual("Relationship Satisfaction", values=likert) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank(),
+        legend.position="top")
+
+# Relationship between job role and work life balance.
+job_wlb <- employee_factor %>% 
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
+  geom_bar(aes(fill=WorkLifeBal), position=position_fill(reverse=T)) +
+  coord_flip() +
+  ylab("Cumulative Proportion") +
+  scale_fill_manual("Work Life Balance", values=likert) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank(),
+        legend.position="top")
+
+grid.arrange(job_envsat, job_jobsat, job_relsat, ncol=2)
+
+```
+
+```{r test2}
+
+job_yearscomp <- employee_factor %>%
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=YrsAtComp, group=JobRole)) +
+  geom_boxplot() +
+  coord_flip() +
+  ylab("Years at Current Company") +
+  scale_fill_brewer(palette="Paired") +
+  theme(axis.text.x=element_text(size=6, angle=45, vjust=1, hjust=1),
+        axis.text.y=element_text(size=6),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank(),
+        legend.position="none")  
+job_yearscomp
 
 ```
 
