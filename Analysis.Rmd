@@ -24,6 +24,9 @@ theme_set(theme_bw())
 
 source('src/MLR-2.R')
 
+# Reusable indicator colors for attrition.
+attcol <- c("No"="seagreen3", "Yes"="indianred3")
+
 ```
 
 # Introduction
@@ -631,6 +634,11 @@ employee_factor %>%
         axis.title.x = element_text(size=10),
         axis.title.y = element_blank())
 
+ggplot(employee_factor, aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
+  geom_bar(aes(fill=Overtime)) +
+  coord_flip() +
+  scale_fill_manual(values=attcol)
+
 ```
 
 ## Attrition
@@ -723,7 +731,7 @@ att_monthlyincome <- ggplot(employee_factor, aes(x=MnthInc, color=Attrition)) +
 
 # Attrition and stock option levels.
 
-grid.arrange(att_hrrate, att_mthinc, ncol=2)
+grid.arrange(att_hourlyrate, att_monthlyincome, ncol=2)
 
 ```
 
@@ -734,6 +742,17 @@ att_bustrav <- ggplot(employee_factor, aes(x=BusTravel, y=..count..)) +
   geom_bar(aes(fill=Attrition), position="fill") +
   coord_flip() +
   ylab("Percentage") +
+  scale_fill_manual(values=attcol) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
+
+att_bustrav2 <- ggplot(employee_factor, aes(x=BusTravel, y=..count..)) +
+  geom_bar(aes(fill=Attrition)) +
+  coord_flip() +
+  ylab("Count") +
   scale_fill_manual(values=attcol) +
   theme(axis.text.x=element_text(size=8),
         axis.text.y=element_text(size=8),
@@ -758,6 +777,8 @@ att_dist <- ggplot(employee_factor, aes(x=DistFromHme, color=Attrition)) +
 # Attrition and overtime.
 
 # Attrition and performance rating.
+
+grid.arrange(att_bustrav, att_bustrav2, ncol=2)
 
 ```
 
@@ -870,6 +891,7 @@ From the summary statistics and density and mosaic plots, a general profile emer
 * No stock option
 * Live further from work and travel more frequently for business
 * Hold lower job level
+* more likely to be a laboratory technician, research scientist, or sales representative
 
 Which of these factors are the biggest determinants for attrition?
 
