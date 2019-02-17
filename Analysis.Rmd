@@ -135,7 +135,7 @@ attrited %>%
 
 For those that are attrited, focus on the people at company less than 2 years
 
-```{r eda-attrited-plots1, message=F, warning=F}
+```{r eda-attrited-lessthan2yearsAtComp, message=F, warning=F}
 attrited.atCoLessThan2Yrs <- attrited[attrited$YrsAtComp < 3,  ]
 
 # Exploratory histograms of continuous variables on attrited 
@@ -149,7 +149,7 @@ attrited.atCoLessThan2Yrs %>%
           axis.text.y=element_text(size=6))
 ```
 
-```{r eda-attrited-plots2, message=F, warning=F}
+```{r eda-attrited-lessthan2yearsAtComp2, message=F, warning=F}
 # Exploratory bar graphs of factor variables.
 attrited.atCoLessThan2Yrs %>%
   keep(is.factor) %>%
