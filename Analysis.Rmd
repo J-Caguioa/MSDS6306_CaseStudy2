@@ -646,8 +646,9 @@ kable(attrited_summary, row.names = T,
 att_age <- ggplot(employee_factor, aes(x=Age, color=Attrition)) +
   geom_density(alpha=0.3) +
   xlab("Age") +
-  ylab("Density")
-
+  ylab("Density") +
+  scale_color_manual(values=attcol)
+  
 # Attrition and gender.
 
 # Attrition and marital status.
@@ -656,29 +657,45 @@ att_age <- ggplot(employee_factor, aes(x=Age, color=Attrition)) +
 
 # Attrition and education field.
 
+grid.arrange(att_age, ncol=2)
+
 ```
 
 ```{r attrition-plots-money}
 
 # Attrition and hourly rate.
-att_hrrate <- ggplot(employee_factor, aes(x=HourlyRate, color=Attrition)) +
+att_hourlyrate <- ggplot(employee_factor, aes(x=HourlyRate, color=Attrition)) +
   geom_density(alpha=0.3) +
   xlab("Hourly Rate") +
-  ylab("Density")
+  ylab("Density") +
+  scale_color_manual(values=attcol)
 
 # Attrition and daily rate.
+att_dailyrate <- ggplot(employee_factor, aes(x=HourlyRate, color=Attrition)) +
+  geom_density(alpha=0.3) +
+  xlab("Hourly Rate") +
+  ylab("Density") +
+  scale_color_manual(values=attcol)
 
 # Attrition and monthly rate.
+att_monthlyrate <- ggplot(employee_factor, aes(x=HourlyRate, color=Attrition)) +
+  geom_density(alpha=0.3) +
+  xlab("Hourly Rate") +
+  ylab("Density") +
+  scale_color_manual(values=attcol)
 
 # Attrition and monthly income.
-att_mthinc <- ggplot(employee_factor, aes(x=MnthInc, color=Attrition)) +
+att_monthlyincome <- ggplot(employee_factor, aes(x=MnthInc, color=Attrition)) +
   geom_density(alpha=0.3) +
   xlab("Monthly Income") +
-  ylab("Density")
+  ylab("Density") +
+  scale_color_manual(values=attcol)
 
 # Attrition and percent salary increase.
 
 # Attrition and stock option levels.
+
+grid.arrange(att_hrrate, att_mthinc, ncol=2)
 
 ```
 
