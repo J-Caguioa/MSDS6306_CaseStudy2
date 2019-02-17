@@ -159,9 +159,13 @@ descriptiveStats1 = employee[c("Age", "MnthInc", "PcntSalInc", "YrsAtComp")]
 
 descriptiveStats2 = employee[c("YrsCurrRole", "YrsSncPromo", "YrsWtCurMgr")]
 
-kable(summary(descriptiveStats1), format='markdown', col.names=c("Age", "Monthly Income", "% Salary Increase", "Years at Company")) %>% kable_styling(bootstrap_options = c("striped", "hover"))
+kable(summary(descriptiveStats1), col.names=c("Age", "Monthly Income", "% Salary Increase", 
+                                              "Years at Company")) %>%   
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
-kable(summary(descriptiveStats2), format='markdown', col.names=c("Years at Current Role", "Years Since Promotion", "Years with Current Manager")) %>% kable_styling(bootstrap_options = c("striped", "hover"))
+kable(summary(descriptiveStats2), col.names=c("Years at Current Role", "Years Since Promotion", 
+                                              "Years with Current Manager")) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
 
 # Descriptive stats - Age
@@ -186,7 +190,7 @@ kable(summary(descriptiveStats2), format='markdown', col.names=c("Years at Curre
 #summary(employee$YrsWtCurMgr)
 ```
 
-The followng is a histrogram showing the distribution of Age in the company.  Overlayed on top of the histogram is the density curve and can see that the ages are pretty normally distributed
+The followng is a histrogram showing the distribution of Age in the company.  Overlayed on top of the histogram is the density curve and can see that the ages are a bit right tailed distributed with a lot of the workforce between 29 and 35 - a relatively young workforce
 ```{r echo=T}
 # Histogram - age
 # 
@@ -200,7 +204,7 @@ ggAge
 ```
 
 
-The following is a histrogram of Monthly Income in the company with an overlay of the density curve showing the distribution of income.  The distribution appears to be right skewed with a higher amount of the monthly income 
+The following is a histrogram of Monthly Income in the company with an overlay of the density curve showing the distribution of income.  The distribution appears to be right skewed with around 300 employees making around $2000 per month 
 ```{r, echo=T}
 # Histogram - Income
 summary(employee$MnthInc)
