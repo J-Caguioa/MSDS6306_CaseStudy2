@@ -153,8 +153,6 @@ The following 2 tables show the descriptive statistics for 7 of the variables wh
 # Descriptive statistics (7) and histograms (2) for interesting variables. [#3B]
 # Age, MnthInc, PcntSalInc, YrsAtComp, YrsCurrRole, YrsSncPromo, YrsWtCurMgr
 
-descriptiveStats = employee[c("Age", "MnthInc", "PcntSalInc", "YrsAtComp", "YrsCurrRole", "YrsSncPromo", "YrsWtCurMgr")]
-
 descriptiveStats1 = employee[c("Age", "MnthInc", "PcntSalInc", "YrsAtComp")]
 
 descriptiveStats2 = employee[c("YrsCurrRole", "YrsSncPromo", "YrsWtCurMgr")]
@@ -166,28 +164,6 @@ kable(summary(descriptiveStats1), col.names=c("Age", "Monthly Income", "% Salary
 kable(summary(descriptiveStats2), col.names=c("Years at Current Role", "Years Since Promotion", 
                                               "Years with Current Manager")) %>% 
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-
-
-# Descriptive stats - Age
-#summary(employee$Age)
-
-# Descriptive stats - MnthInc
-#summary(employee$MnthInc)
-
-# Descriptive stats - PcntSalInc
-#summary(employee$PcntSalInc)
-
-# Descriptive stats - YrsAtComp
-#summary(employee$YrsAtComp)
-
-# Descriptive stats - YrsCurrRole
-#summary(employee$YrsCurrRole)
-
-# Descriptive stats - YrsSncPromo
-#summary(employee$YrsSncPromo)
-
-# Descriptive stats - YrsWtCurMgr
-#summary(employee$YrsWtCurMgr)
 ```
 
 The followng is a histrogram showing the distribution of Age in the company.  Overlayed on top of the histogram is the density curve and can see that the ages are a bit right tailed distributed with a lot of the workforce between 29 and 35 - a relatively young workforce
