@@ -130,6 +130,34 @@ attrited %>%
           axis.text.y=element_text(size=6))
 ```
 
+For those that are attrited, focus on the people at company less than 2 years
+
+```{r eda-attrited-plots1, message=F, warning=F}
+attrited.atCoLessThan2Yrs <- attrited[attrited$YrsAtComp < 3,  ]
+
+# Exploratory histograms of continuous variables on attrited 
+attrited.atCoLessThan2Yrs %>%
+  keep(is.numeric) %>%
+  gather() %>%
+  ggplot(aes(value), fill=Attrition) +
+    facet_wrap(~ key, scales="free") +
+    geom_histogram() +
+    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=6))
+```
+
+```{r eda-attrited-plots2, message=F, warning=F}
+# Exploratory bar graphs of factor variables.
+attrited.atCoLessThan2Yrs %>%
+  keep(is.factor) %>%
+  gather() %>%
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales="free") +
+    geom_bar() +
+    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=6))
+```
+
 The exploratory bar graphs are similarly informative.
 
 * Department shows that most employees are in Research & Development, followed by Sales. On a related note, Job Role shows most employees are Sales Executives, Research Scientists, or Laboratory Technicians; Education Field shows most have a background in Life Sciences or Medical. Job Level for most is 1 or 2.
