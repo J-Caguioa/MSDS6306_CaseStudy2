@@ -191,7 +191,7 @@ ggIncome
 ```
 
 ## 3c. Frequencies on Gender, Education, Occupation
-
+The table command is used to count the employee data by a specified field type. The gender table shows that 60% of the employees are male in this database.   The education level shows that the highest concentration employees have Bachelor degree follow closely by the Master's degree.   These two positions account for 68% of the overall employee database.
 ```{r frequencies}
 
 GenderData<- table(employee$Gender)
@@ -213,10 +213,20 @@ kable(EducationData,
       table.attr="style='width:30%;'") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
+JobRoleData <- table(employee$JobRole)
+kable(JobRoleData,
+      col.names = c("Job Role",
+                    "Count"),
+      row.names = T,
+      caption="Headcount By Job Role",
+      table.attr="style='width:50%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
 
 ```
 
 ## 3d. Counts of Management positions
+Our analysis of the data did not base management positions soley on the job grade.  Two tracks for promotion include the individual contributor and management track.   The management track in our analysis includes positions in which employee line management would exist.   Manager, Manufacturing Director and the Research Director would fall into that category. Using this definition 22% of the positions are management.  All of other positions were not considered as management.
 
 ```{r management}
 
