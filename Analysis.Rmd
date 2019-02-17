@@ -141,6 +141,7 @@ Before proceeding further, any variables with no variation (Employee Count, Over
 ## 3b. Descriptive stats
 
 The following 2 tables show the descriptive statistics for 7 of the variables which include
+
 + Age
 + Monthly Income (MnthInc)
 + Percent Salary Increase (PcntSalInc)
@@ -901,7 +902,7 @@ rfImpVar[order(rfImpVar[,3], decreasing=T),]
 
 ```{r kmeans}
 
-employee_kmeans <- kmeans(employee_factor, centers=5, nstart=20)
+#employee_kmeans <- kmeans(employee_factor, centers=5, nstart=20)
 
 
 ```
