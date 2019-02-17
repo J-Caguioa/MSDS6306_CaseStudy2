@@ -140,37 +140,35 @@ Before proceeding further, any variables with no variation (Employee Count, Over
 
 ## 3b. Descriptive stats
 
+The following 2 tables show the descriptive statistics for 7 of the variables which include
+
++ Age
++ Monthly Income (MnthInc)
++ Percent Salary Increase (PcntSalInc)
++ Years at Company (YrsAtComp)
++ Years at Current Role (YrsCurrRole)
++ Years Since Promotion (YrsSncPromo)
++ Years with Current Manager (YrsWtCurMgr)
+
 ```{r descriptive,echo=TRUE}
 # Descriptive statistics (7) and histograms (2) for interesting variables. [#3B]
 # Age, MnthInc, PcntSalInc, YrsAtComp, YrsCurrRole, YrsSncPromo, YrsWtCurMgr
 
-descriptiveStats = employee[c("Age", "MnthInc", "PcntSalInc", "YrsAtComp", "YrsCurrRole", "YrsSncPromo", "YrsWtCurMgr")]
+descriptiveStats1 = employee[c("Age", "MnthInc", "PcntSalInc", "YrsAtComp")]
 
-kable(summary(descriptiveStats))
+descriptiveStats2 = employee[c("YrsCurrRole", "YrsSncPromo", "YrsWtCurMgr")]
 
+kable(summary(descriptiveStats1), col.names=c("Age", "Monthly Income", "% Salary Increase", 
+                                              "Years at Company")) %>%   
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
-# Descriptive stats - Age
-summary(employee$Age)
+kable(summary(descriptiveStats2), col.names=c("Years at Current Role", "Years Since Promotion", 
+                                              "Years with Current Manager")) %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
 
-# Descriptive stats - MnthInc
-summary(employee$MnthInc)
-
-# Descriptive stats - PcntSalInc
-summary(employee$PcntSalInc)
-
-# Descriptive stats - YrsAtComp
-summary(employee$YrsAtComp)
-
-# Descriptive stats - YrsCurrRole
-summary(employee$YrsCurrRole)
-
-# Descriptive stats - YrsSncPromo
-summary(employee$YrsSncPromo)
-
-# Descriptive stats - YrsWtCurMgr
-summary(employee$YrsWtCurMgr)
-
-
+The followng is a histrogram showing the distribution of Age in the company.  Overlayed on top of the histogram is the density curve and can see that the ages are a bit right tailed distributed with a lot of the workforce between 29 and 35 - a relatively young workforce
+```{r echo=T}
 # Histogram - age
 # 
 summary(employee$Age)
@@ -180,7 +178,11 @@ ggAge = ggAge +scale_fill_gradient("Count", low="green", high="red")
 ggAge = ggAge +geom_density(col="blue")
 ggAge = ggAge +labs(title="Histogram for Age", x="Age", y="Density")
 ggAge
+```
 
+
+The following is a histrogram of Monthly Income in the company with an overlay of the density curve showing the distribution of income.  The distribution appears to be right skewed with around 300 employees making around $2000 per month 
+```{r, echo=T}
 # Histogram - Income
 summary(employee$MnthInc)
 ggIncome = ggplot(employee, aes(MnthInc))
@@ -222,8 +224,6 @@ kable(JobRoleData,
       caption="Headcount By Job Role",
       table.attr="style='width:50%;'") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-
-
 ```
 
 ## 3d. Counts of Management positions
