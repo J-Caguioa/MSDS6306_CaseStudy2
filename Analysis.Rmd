@@ -13,18 +13,19 @@ output:
 
 ---
 
-```{r setup, include=F, message=F, results="hide", warning=F}
+```{r setup, include=T, message=F, results="hide", warning=F}
 knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 999)
 
-package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic", "magrittr", "caret", "randomForest", "reshape", "gridExtra", "GGally", "purrr", "cowplot", "rpart", "rpart.plot", "leaps")
+# Packages used.
+package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic", "magrittr", "caret", "randomForest", "reshape", "gridExtra", "GGally", "purrr", "cowplot", "rpart", "rpart.plot", "leaps", "plyr")
 lapply(package_list, library, character.only=T)
 
 theme_set(theme_bw())
 
 source('src/MLR-2.R')
 
-# Reusable indicator colors for attrition.
+# Reusable colors for attrition.
 attcol <- c("No"="seagreen3", "Yes"="indianred3")
 
 ```
@@ -63,8 +64,8 @@ colnames(employee) <- renamed$`Modified_Name`
 # Create data frame where all factor-type variables are converted accordingly.
 employee_factor <- data.frame(employee)
 employee_factor <- employee_factor %>% mutate_if(is.character, as.factor)
-factor_cols <- c("Education", "EmpCount", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StandHours", "StckOptLev", "WorkLifeBal")
-employee_factor %<>% mutate_each(funs(factor(.)), factor_cols)
+#factor_cols <- c("Education", "EmpCount", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StandHours", "StckOptLev", "WorkLifeBal")
+#employee_factor %<>% mutate_each(funs(factor(.)), factor_cols)
 
 # Create data frame where all variables are numeric.
 employee_numeric <- data.frame(employee_factor)
@@ -197,8 +198,6 @@ As shown in a bar graph above, the Over 18 variable indicates that all employees
 
 Before proceeding further, any variables with no variation (Employee Count, Over 18, and Standard Hours) can be removed because they have no useful information for predictive modeling. Employee ID can also be removed because observations can be tracked by other means. This results in a data frame of 1,470 rows and 31 columns.
 
-
-
 # 3. Preliminary Analysis
 
 ## 3b. Descriptive stats
@@ -310,6 +309,8 @@ kable(ManagerRoleData,
 
 ## Correlation
 
+DDSAnalytics' main question of interest with this data set is to identify factors contributing to turnover, but other trends in the data may also be useful. Therefore, a visualization that shows how the variables correlate with each other is a good starting point for analysis.
+
 ``` {r correlations1, warning=F}
 
 # Show correlating variables for further investigation.
@@ -317,50 +318,83 @@ corrplot(cor(employee_numeric), type = "upper", tl.col = "black", tl.srt = 45, t
 
 ```
 
-For reference, the correlogram shows some correlations between the following variables ("Years%" refers to the last four variables beginning with the word "Years"):
+The above correlogram requires the fully numeric version of the data frame. Any correlations involving a categorical variable with no intrinsic order, such as the strong negative correlation between Marital Status and Stock Option Level, requires more investigation to determine whether the correlation is meaningful or just a byproduct of the numeric coercion. In this plot, darker colors and larger circles are associated with stronger correlations. Hence, the diagonal of each variable against itself is a dark blue circle that fills its cell, representing an expected Pearson's r of 1.
 
-* Age: Education, JobLevel, MonthlyIncome, TotalWorkingYears, Years%
-* Department: JobRole
-    + Possibly makes sense, as certain job roles tend to be used in certain departments. Cross-reference back to original factors; the numeric coercion may be creating noise.
-* Education: NumCompaniesWorked, TotalWorkingYears
-* JobLevel: MonthlyIncome, TotalWorkingYears, Years%
-* MaritalStatus: StockOptionLevel
-* MonthlyIncome: Age, TotalWorkingYears, Years%
-    + Likely increases with experience
-* NumCompaniesWorked: TotalWorkingYears
-* PercentSalaryHike: PerformanceRating
-    + According to FAQs, data is self-reported. Performance rating is likely artificially high.
-* TotalWorkingYears: Age, JobLevel, MonthlyIncome, Years%
-* Years%: Other Years%
+Some of the following relationships stand out on a cursory exploration:
 
-```{r correlations2}
+* Age, Job Level, Monthly Income, Total Working Years, Years At Company, Years In Current Role, Years Since Last Promotion, and Years With Current Manager all show moderate to strong positive correlations with each other. This makes intuitive sense, as an older person with a longer career is more likely to hold higher positions and wield more earning potential. (Age and Monthly Income specifically are further explored in the Age and Income section.) By itself, Age also has weaker positive correlations with amount of Education and Number of Companies Worked.
+* Department and Job Role show a strong positive correlation. Though both are categorical variables, the alphabetical organization within both happens to line up such that their numbers trend together, such as Sales Representatives in the Sales department. This is further explored in the Job-Specific Trends section.
+* Hourly Rate, Daily Rate, Monthly Rate, and Monthly Income do not show any correlation. This finding is unexpected, as one would expect these monetary variables to show some sort of relationship. This is further explored in the Rates & Income section.
+* Performance Rating and Percent Salary Increase show a strong positive correlation; those who perform the best are likely given the biggest pay raises. Sure enough, only employees who reported an Oustanding performance rating (4 out of 4) were rewarded with raises above 20%, as shown below.
 
-# Divorced = 1, Married = 2, Single = 3. All Singles have StockOptionLevel = 0.
-table(employee_numeric$MaritalStat, employee_numeric$StckOptLev)
+```{r performance-payraise}
 
-# Overtime 1 = No, 2 = Yes. About the same percentage of people worked overtime, regardless of marital status.
-table(employee_numeric$MaritalStat, employee_numeric$Overtime)
-
-# Percentagewise, marital status distributed evenly by job level.
-table(employee_numeric$MaritalStat, employee_numeric$JobLevel)
+ggplot(employee_factor, aes(x=PcntSalInc, y=PerfRating)) + 
+  geom_point(alpha=0.1, size=3) +
+  scale_x_continuous(breaks=seq(10,25, by=5)) +
+  scale_y_continuous(breaks=seq(3,4, by=1)) +
+  xlab("Percent Salary Increase") +
+  ylab("Performance Rating")
 
 ```
 
-Attrition's individual correlations are relatively weak. Perhaps studying interaction effects will show a stronger effect.
+Individual correlations between Attrition and other variables are relatively weak. Of these, Overtime, Monthly Income, Job Level, and any of the variables related to career length (e.g., Age, Total Working Years) look the most promising. This is further explored in the Predicting Attrition section.
 
-* Attrition: Age, EnvironmentSatisfaction, JobInvolvement, JobLevel, JobSatisfaction, MaritalStatus, MonthlyIncome, OverTime, StockOptionLevel, TotalWorkingYears, YearsAtCompany, YearsInCurrentRole, YearsWithCurrManager
-    + MaritalStatus and OverTime show positive correlations, the rest are negative. Makes sense in context for some, eg, lower JobInvolvement/Level/Satisfaction increases likelihood of attrition?
+## Rates & Income
+
+The data set contains four variables related to money: Hourly Rate, Daily Rate, Monthly Rate, and Monthly Income. Their data definitions are not well-defined, but it can be reasonably assumed that the "Rate" variables relate to wages earned over the indicated unit of time and the "Income" variable translates to monthly take-home pay. If this were the case, it should be feasible to build a model to describe the relationship between them.
+
+```{r rate-income1, message=F, warning=F}
+
+# Visualize relationship between rates and income. Unable to apply custom attrition palette to ggpairs.
+ggpairs(employee_factor, aes(color=Attrition, alpha=0.1), 
+        columns=c("HourlyRate", "DailyRate", "MnthRate", "MnthInc"),
+        title="Correlation Matrix for Monetary Variables and Attrition",
+        axisLabels="none",
+        upper=list(continuous=wrap("cor", size=3, hjust=0.8)))
+
+```
+
+Scatterplots of the rates and income variables against each other do not show any discernible relationship; the correlation values, being near zero, would suggest that no relationship exists at all, supporting the earlier observation made about the correlogram. This is an unexpected result, as one would reasonably expect that these variables would trend together. Perhaps another variable not captured by the data, or the survey method by which the data was collected from employees, is responsible.
+
+Another oddity reveals itself when we compare the minimum and maximum values for each variable.
+
+```{r rate-income2}
+
+# Divide data based on which of Monthly Income and Rate is greater.
+MnthIncGreater <- summary(employee_factor[which(employee_factor$MnthRate < employee_factor$MnthInc), ])
+MnthRateGreater <- summary(employee_factor[which(employee_factor$MnthRate > employee_factor$MnthInc), ])
+
+# Display lower and upper bounds for each category.
+employee_money <- data.frame(
+  rbind(c(min(employee_numeric$HourlyRate), max(employee_numeric$HourlyRate)),
+        c(min(employee_numeric$DailyRate), max(employee_numeric$DailyRate)),
+        c(min(employee_numeric$MnthRate), max(employee_numeric$MnthRate)),
+        c(min(employee_numeric$MnthInc), max(employee_numeric$MnthInc))))
+row.names(employee_money) <- c("Hourly Rate", "Daily Rate", "Monthly Rate", "Monthly Income")
+colnames(employee_money) <- c("Minimum", "Maximum")
+
+kable(employee_money,
+      col.names = c("Minimum", "Maximum"),
+      row.names = T,
+      caption="Rates & Income Bounds",
+      table.attr="style='width:50%;'") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+
+```
+
+For all observations, Monthly Rate is greater than Daily Rate, which in turn is greater than Hourly Rate. This is expected. However, Monthly Rate is greater than Monthly Income for only `r round(mean(employee_numeric$MnthRate > employee_numeric$MnthInc) * 100, digits=2)`% of the observations; in other words, 258 of the 1,470 employees reported a greater Monthly Income than Monthly Rate. Assuming the above interpretation of rate as pre-deduction and income as post-deduction earnings is accurate, why might this be? Investigating the reason for these strange trends is recommended.
 
 ## 4c. Age and Income
 
+
+
 ```{r age-income}
 
-# Relationship between Age and Income. [#4C]
+# Relationship between age and monthly income. [#4C]
 cor(employee$Age, employee$MnthInc)
 
-lm1 <- lm(MnthInc ~ Age, employee)
-summary(lm1)
-
+# Scatterplot with 
 ggplot(employee, aes(x=Age, y=MnthInc, color=Gender)) +
   geom_point(alpha=0.3) +
   xlab("Age (years)") +
@@ -416,130 +450,184 @@ ggplot(employee, aes(x=YrsAtComp, y=MnthInc)) +
 
 ```
 
-## Rates & Income
-
-The data set contains four variables related to money: Hourly Rate, Daily Rate, Monthly Rate, and Monthly Income. Their data definitions are not well-defined, but it can be reasonably assumed that the "Rate" variables relate to wages earned over the indicated unit of time and the "Income" variable translates to monthly take-home pay. If this is the case, can a model be built to describe the relationship between them?
-
-```{r rate-income1, message=F, warning=F}
-
-# Visualize relationship between rates and income.
-ggpairs(employee_factor, aes(color=Attrition, alpha=0.1), 
-        columns=c("HourlyRate", "DailyRate", "MnthRate", "MnthInc"),
-        title="Correlation Matrix for Monetary Variables and Attrition",
-        axisLabels="none",
-        upper=list(continuous=wrap("cor", size=3, hjust=0.8)))
-
-```
-
-Scatterplots of the rates and income variables against each other do not show any discernible relationship; the correlation values, being near zero, would suggest that no relationship exists at all. This is an unexpected result, as one would expect that these variables would trend together. Perhaps another variable not captured by the data, or the survey method by which the data was collected from employees, is responsible.
-
-Another oddity reveals itself when we compare the minimum and maximum values for each variable.
-
-```{r rate-income2}
-
-# Divide data based on which of Monthly Income and Rate is greater.
-MnthIncGreater <- summary(employee_factor[which(employee_factor$MnthRate < employee_factor$MnthInc), ])
-MnthRateGreater <- summary(employee_factor[which(employee_factor$MnthRate > employee_factor$MnthInc), ])
-
-# Display lower and upper bounds for each category.
-employee_money <- data.frame(
-  rbind(c(min(employee_numeric$HourlyRate), max(employee_numeric$HourlyRate)),
-        c(min(employee_numeric$DailyRate), max(employee_numeric$DailyRate)),
-        c(min(employee_numeric$MnthRate), max(employee_numeric$MnthRate)),
-        c(min(employee_numeric$MnthInc), max(employee_numeric$MnthInc))))
-row.names(employee_money) <- c("Hourly Rate", "Daily Rate", "Monthly Rate", "Monthly Income")
-colnames(employee_money) <- c("Minimum", "Maximum")
-
-kable(employee_money,
-      col.names = c("Minimum", "Maximum"),
-      row.names = T,
-      caption="Rates & Income Bounds",
-      table.attr="style='width:50%;'") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-
-```
-
-For all observations, Monthly Rate is greater than Daily Rate, which in turn is greater than Hourly Rate. This is expected. However, Monthly Rate is greater than Monthly Income for only `r round(mean(employee_numeric$MnthRate > employee_numeric$MnthInc) * 100, digits=2)`% of the observations; in other words, 258 of the 1,470 employees reported a greater Monthly Income than Monthly Rate. Assuming the above interpretation of rate as pre-deduction and income as post-deduction earnings is accurate, why might this be?
 
 ## Job-Specific Trends
 
 Employees in this data set fall into nine different job roles. Do some trends apply to certain jobs more than others?
 
-```{r job-role}
+```{r function1}
 
 # Distinct colors, borrowed from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
 jobcolors <- c("#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFEF45")
+softcolors <- c("#469990", "#E6BEFF", "#FFFAC8", "#800000", "#AAFFC3", "#FFD8B1", "#808000", "#000075", "#9A6324")
 
-# Function that ggplots boxplots. Takes nominal groups on x-axis. Prefers continuous variable on y-axis.
+# Function that produces ggplot boxplots. Takes nominal groups on x-axis. Prefers continuous variable on y-axis.
 ContVsNomBoxplots <- function(df, xvar="groups", yvar="continuous") {
   ggplot(df, aes_string(x=xvar, y=yvar, group=xvar, fill=xvar)) +
     geom_boxplot() +
-    scale_fill_manual(values=jobcolors) +
+#    scale_fill_manual(values=jobcolors) +
     stat_summary(fun.y=mean, color="black", geom="point", shape=5, size=2) +
+    guides(fill=guide_legend(title.position="top", title.hjust=0.5, ncol=2, byrow=F)) +
     theme(axis.text.x=element_blank(),
           axis.text.y=element_text(size=6),
           axis.ticks=element_blank(),
           axis.title=element_blank(),
-          legend.justification="top",
-          legend.position="right",
-          plot.title = element_text(hjust = 0.5))
+          legend.key.size=unit(1,"line"),
+          legend.position="bottom",
+          legend.text=element_text(size=5),
+          legend.title=element_text(size=6),
+          plot.title = element_text(hjust = 0.5, size=8))
 }
-
-
-ContVsNomBoxplots(employee_factor, "JobRole", "MnthInc") + 
-  ggtitle("Monthly Income") + theme(legend.position="none")
-
-
-ContVsNomBoxplots(employee_factor, "JobRole", "PcntSalInc") +
-  ggtitle("Percent Salary Increase") + theme(legend.position="none")
-
-ContVsNomBoxplots(employee_factor, "JobRole", "Age") +
-  ggtitle("Age") + theme(legend.position="none")
-
-ContVsNomBoxplots(employee_factor, "JobRole", "DistFromHme") +
-  ggtitle("Distance From Home") + theme(legend.position="none")
-
-ContVsNomBoxplots(employee_factor, "JobRole", "NumCoWorked") +
-  ggtitle("Number of Companies Worked") + theme(legend.position="none") + scale_y_continuous(breaks=seq(0,10, by=2))
-
-ContVsNomBoxplots(employee_factor, "JobRole", "TotalWrkYrs") +
-  ggtitle("Total Work Years") + theme(legend.position="none")
-
-ContVsNomBoxplots(employee_factor, "JobRole", "YrsAtComp") +
-  ggtitle("Years at Current Company") + theme(legend.position="none")
-
-ContVsNomBoxplots(employee_factor, "JobRole", "YrsCurrRole") +
-  ggtitle("Years in Current Role") + theme(legend.position="none")
-
-ContVsNomBoxplots(employee_factor, "JobRole", "YrsWtCurMgr") +
-  ggtitle("Years with Current Manager") + theme(legend.position="none")
-
-
-# # Relationship between job role and attrition.
-# job_att <- ggplot(employee_factor, aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
-#   geom_bar(aes(fill=Attrition)) +
-#   coord_flip() +
-#   ylab("Cumulative Proportion") +
-#   scale_fill_manual("Attrition", values=c("Yes"="indianred3", "No"="seagreen3")) +
-#   theme(axis.text.x=element_text(size=8),
-#         axis.text.y=element_text(size=8),
-#         axis.ticks.y = element_blank(),
-#         axis.title.x = element_text(size=10),
-#         axis.title.y = element_blank(),
-#         legend.position="top")
-# 
-# 
-# 
-# #grid.arrange(job_mnthinc, job_yearscomp, job_att, job_co_worked, job_salinc, ncol=2)
-# 
-# legend <- get_legend(job_mnthinc)
-# plot_grid(job_mnthinc +theme(legend.position="none"), job_yearscomp, legend, align='vh', labels=c("A","B"), hjust=-1, nrow=1)
-# 
-# job_att
 
 ```
 
-```{r job}
+```{r jobrole1}
+
+# Throwaway graph to obtain common job role legend.
+jobrole_age_a <- ContVsNomBoxplots(employee_factor, "JobRole", "Age") +
+  scale_fill_manual("Job Roles", values=jobcolors)
+jobrole_legend <- get_legend(jobrole_age_a)
+
+# Group 1 of job role boxplots.
+# Job role and monthly income boxplots.
+jobrole_monthincome <- ContVsNomBoxplots(employee_factor, "JobRole", "MnthInc") + 
+  ggtitle("Monthly Income") + theme(legend.position="none")
+# Job role and percent salary increase boxplots.
+jobrole_salaryincrease <- ContVsNomBoxplots(employee_factor, "JobRole", "PcntSalInc") +
+  ggtitle("Percent Salary Increase") + theme(legend.position="none")
+# Job role and distance from home boxplots.
+jobrole_distancehome <- ContVsNomBoxplots(employee_factor, "JobRole", "DistFromHme") +
+  ggtitle("Distance From Home") + theme(legend.position="none")
+# Job role and age boxplots.
+jobrole_age <- ContVsNomBoxplots(employee_factor, "JobRole", "Age") +
+  ggtitle("Age") + theme(legend.position="none")
+
+# Arrange first set of job role boxplots with common legend. 
+grid.arrange(jobrole_monthincome, jobrole_salaryincrease, jobrole_distancehome, jobrole_age, jobrole_legend, ncol=3)
+
+```
+
+On average and as a whole, managers and research directors are older and have a higher monthly income. In a similar vein, sales representatives are younger and make the least. Despite their title, manufacturing directors have a monthly income roughly on par with healthcare representatives and sales executives; these three groups have similar age distributions. Fittingly, these trends provide supporting evidence to the earlier exploration of the correlation between age and monthly income.
+
+```{r jobrole2}
+
+# Grouping of boxplots involving years as the continuous variable.
+# Job role and total working years boxplots.
+jobrole_totalworkyears <- ContVsNomBoxplots(employee_factor, "JobRole", "TotalWrkYrs") +
+  ggtitle("Total Work Years") + theme(legend.position="none")
+# Job role and years in current role boxplots.
+jobrole_currentyears <- ContVsNomBoxplots(employee_factor, "JobRole", "YrsCurrRole") +
+  ggtitle("Years in Current Role") + theme(legend.position="none")
+# Job role and years at current company boxplots.
+jobrole_yearsatcomp <- ContVsNomBoxplots(employee_factor, "JobRole", "YrsAtComp") +
+  ggtitle("Years at Current Company") + theme(legend.position="none")
+# Job role and years with current manager boxplots.
+jobrole_currentmanager <- ContVsNomBoxplots(employee_factor, "JobRole", "YrsWtCurMgr") +
+  ggtitle("Years with Current Manager") + theme(legend.position="none")
+# Job role and number of companies worked boxplots.
+jobrole_numcompanies <- ContVsNomBoxplots(employee_factor, "JobRole", "NumCoWorked") +
+  ggtitle("Number of Companies Worked") + theme(legend.position="none") + scale_y_continuous(breaks=seq(0,10, by=2))
+
+# Arrange remaining job role boxplots related to years with common legend.
+grid.arrange(jobrole_totalworkyears, jobrole_currentyears, jobrole_yearsatcomp, jobrole_currentmanager, jobrole_numcompanies, jobrole_legend, ncol=3)
+
+```
+
+Perhaps correlated with their age and contributing to their higher monthly income, managers and reserach directors also, as a whole, have the most experience in work years and the longest stays with the company in their present role. Additionally, research directors have, on average, worked at more companies during their career; it's reasonable to assume that they are being well-compensated for their expertise.
+
+On the flipside, young sales representatives also stand out for being early in their careers, with the lowest total working years and years with the company as a group.
+
+```{r jobrole3}
+
+SimpleMean <- function(var) {
+  round(mean(var),2)
+}
+
+# Table summarizing interval variables by job role.
+ddply(employee_factor, .(JobRole), summarize,
+      Education=SimpleMean(Education),
+      EnvironSat=SimpleMean(EnvironSat),
+      JobInvolvemt=SimpleMean(JobInvolvemt),
+      JobLevel=SimpleMean(JobLevel),
+      JobSat=SimpleMean(JobSat),
+      PerfRating=SimpleMean(PerfRating),
+      RelationSat=SimpleMean(RelationSat),
+      StckOptLevel=SimpleMean(StckOptLev),
+      WorkLifeBal=SimpleMean(WorkLifeBal)) %>%
+  kable(caption="Job Roles: Means for Interval Variables", align="c",
+        col.names=c("Job Role", "Education", "Environment Satisfaction", "Job Involvement", "Job Level", "Job Satisfaction", "Performance Rating", "Relationship Satisfaction", "Stock Option Level", "Work Life Balance")) %>% 
+  kable_styling(bootstrap_options=c("striped", "hover", "condensed"), font_size=7)
+
+
+```
+
+* Research directors, managers, and sales executives are the most well-educated. Average employees in these roles have at least a bachelors degree.
+* Managers and research directors have the highest average job level, to which their monthly incomes are likely commensurate.
+* Human resources roles report the highest work-life balance and satisfaction in their relationships, but the lowest job satisfaction.
+* Sales representatives are the least educated and hold the lowest-level jobs. They report the lowest job involvement and second-highest work-life balance, yet the lowest relationship satisfaction.
+
+```{r jobrole4, message=F, warning=F}
+
+# Reusable theme elements common across stacked barplots.
+clean_bar_theme <- theme(axis.text=element_text(size=7),
+                         axis.title.x=element_text(size=8),
+                         axis.title.y=element_blank(),
+                         axis.ticks=element_blank(),
+                         legend.key.size=unit(1,"line"),
+                         legend.text=element_text(size=5),
+                         legend.title=element_text(size=12),
+                         legend.position="top",
+                         plot.title=element_text(hjust=0.5, size=8))
+
+# Unable to abstract function call to table.
+# 
+job_attrition <- data.frame(with(employee_factor, table(JobRole, Attrition))) %>%
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=Attrition)) +
+  geom_bar(aes(weight=Freq, position="stack")) +
+  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  coord_flip() +
+  ylab("Frequency") +
+  scale_fill_manual("Attrition", values=attcol) +
+  clean_bar_theme
+
+job_travel <- data.frame(with(employee_factor, table(JobRole, BusTravel))) %>%
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=BusTravel)) +
+  geom_bar(aes(weight=Freq, position="stack")) +
+  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  coord_flip() +
+  ylab("Frequency") +
+  scale_fill_manual("Business Travel", values=softcolors) +
+  clean_bar_theme
+
+job_dept <- data.frame(with(employee_factor, table(JobRole, Department))) %>%
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=Department)) +
+  geom_bar(aes(weight=Freq, position="stack")) +
+  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  coord_flip() +
+  ylab("Frequency") +
+  scale_fill_manual("Department", values=softcolors) +
+  clean_bar_theme
+job_dept
+
+job_marital <- data.frame(with(employee_factor, table(JobRole, MaritalStat))) %>%
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=MaritalStat)) +
+  geom_bar(aes(weight=Freq, position="stack")) +
+  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  coord_flip() +
+  ylab("Frequency") +
+  scale_fill_manual("Marital Status", values=softcolors) +
+  clean_bar_theme
+
+job_overtime <- data.frame(with(employee_factor, table(JobRole, Overtime))) %>%
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=Overtime)) +
+  geom_bar(aes(weight=Freq, position="stack")) +
+  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  coord_flip() +
+  ylab("Frequency") +
+  scale_fill_manual("Overtime", values=attcol) +
+  clean_bar_theme
+job_overtime
+
 ```
 
 
@@ -551,7 +639,7 @@ employee_factor %>%
   geom_bar(aes(fill=BusTravel), position="fill") +
   coord_flip() +
   ylab("Percentage") +
-  scale_color_distiller(palette="RdPu") +
+  scale_fill_manual(values=softcolors) +
 #  scale_fill_manual("Attrition", values=c("No"="seagreen3", "Yes"="indianred3")) +
   theme(axis.text.x=element_text(size=8),
         axis.text.y=element_text(size=8),
@@ -559,112 +647,48 @@ employee_factor %>%
         axis.title.x = element_text(size=10),
         axis.title.y = element_blank())
 
-# Reusable Likert scale colors.
-likert <- c("1"="indianred3", "2"="bisque1", "3"="olivedrab3", "4"="springgreen3")
-
-# Relationship between job role and environment satisfaction.
-job_envsat <- employee_factor %>% 
-  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
-  geom_bar(aes(fill=EnvironSat), position=position_fill(reverse=T)) +
-  coord_flip() +
-  ylab("Cumulative Proportion") +
-  scale_fill_manual("Job Satisfaction", values=likert) +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank(),
-        legend.position="right")
-
-# Relationship between job role and job satisfaction.
-job_jobsat <- employee_factor %>% 
-  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
-  geom_bar(aes(fill=JobSat), position=position_fill(reverse=T)) +
-  coord_flip() +
-  ylab("Cumulative Proportion") +
-  scale_fill_manual("Job Satisfaction", values=likert) +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank(),
-        legend.position="top")
-
-# Relationship between job role and relationship satisfaction.
-job_relsat <- employee_factor %>% 
-  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
-  geom_bar(aes(fill=RelationSat), position=position_fill(reverse=T)) +
-  coord_flip() +
-  ylab("Cumulative Proportion") +
-  scale_fill_manual("Relationship Satisfaction", values=likert) +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank(),
-        legend.position="top")
-
-# Relationship between job role and work life balance.
-job_wlb <- employee_factor %>% 
-  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
-  geom_bar(aes(fill=WorkLifeBal), position=position_fill(reverse=T)) +
-  coord_flip() +
-  ylab("Cumulative Proportion") +
-  scale_fill_manual("Work Life Balance", values=likert) +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_blank(),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank(),
-        legend.position="top")
-
-#grid.arrange(job_envsat, job_jobsat, job_relsat, ncol=2)
-prow <- plot_grid(job_envsat+theme(legend.position="none"),
-                  job_jobsat+theme(legend.position="none"),
-                  job_relsat+theme(legend.position="none"),
-                  align='vh', hjust=-1, nrow=1)
-legend2 <- get_legend(job_envsat)
-plot_grid(prow, legend, rel_widths=c(4, .3))
+# # Reusable Likert scale colors.
+# likert <- c("1"="indianred3", "2"="bisque1", "3"="olivedrab3", "4"="springgreen3")
 
 ```
 
 ```{r test2}
 
-job_yearscomp <- employee_factor %>%
-  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=YrsAtComp, group=JobRole)) +
-  geom_boxplot() +
-  coord_flip() +
-  ylab("Years at Current Company") +
-  scale_fill_brewer(palette="Paired") +
-  theme(axis.text.x=element_text(size=6, angle=45, vjust=1, hjust=1),
-        axis.text.y=element_text(size=6),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank(),
-        legend.position="none")  
-job_yearscomp
-
-employee_factor %>%
-#  mutate(BusTravel=fct_relevel(BusTravel,"Non-Travel", "Travel_Rarely", "Travel_Frequently")) %>%
-  ggplot(aes(x=BusTravel, y=..count..)) +
-  geom_bar(aes(fill=Attrition), position="fill") +
-  coord_flip() +
-  ylab("Percentage") +
-  scale_color_distiller(palette="RdPu") +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank())
-
-ggplot(employee_factor, aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
-  geom_bar(aes(fill=Overtime)) +
-  coord_flip() +
-  scale_fill_manual(values=attcol)
+# job_yearscomp <- employee_factor %>%
+#   ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=YrsAtComp, group=JobRole)) +
+#   geom_boxplot() +
+#   coord_flip() +
+#   ylab("Years at Current Company") +
+#   scale_fill_brewer(palette="Paired") +
+#   theme(axis.text.x=element_text(size=6, angle=45, vjust=1, hjust=1),
+#         axis.text.y=element_text(size=6),
+#         axis.ticks.y = element_blank(),
+#         axis.title.x = element_text(size=10),
+#         axis.title.y = element_blank(),
+#         legend.position="none")  
+# job_yearscomp
+# 
+# employee_factor %>%
+# #  mutate(BusTravel=fct_relevel(BusTravel,"Non-Travel", "Travel_Rarely", "Travel_Frequently")) %>%
+#   ggplot(aes(x=BusTravel, y=..count..)) +
+#   geom_bar(aes(fill=Attrition), position="fill") +
+#   coord_flip() +
+#   ylab("Percentage") +
+#   scale_color_distiller(palette="RdPu") +
+#   theme(axis.text.x=element_text(size=8),
+#         axis.text.y=element_text(size=8),
+#         axis.ticks.y = element_blank(),
+#         axis.title.x = element_text(size=10),
+#         axis.title.y = element_blank())
+# 
+# ggplot(employee_factor, aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
+#   geom_bar(aes(fill=Overtime)) +
+#   coord_flip() +
+#   scale_fill_manual(values=attcol)
 
 ```
 
-## Attrition
+## Predicting Attrition
 
 ```{r attrition0, fig.width=1, fig.height=1}
 
