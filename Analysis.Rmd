@@ -60,11 +60,13 @@ renamed <- read_excel('Data/VariableNames.xlsx')
 colnames(employee) <- renamed$`Modified_Name`
 
 # Convert column types. [#2D]
+# Create data frame where all factor-type variables are converted accordingly.
 employee_factor <- data.frame(employee)
 employee_factor <- employee_factor %>% mutate_if(is.character, as.factor)
 factor_cols <- c("Education", "EmpCount", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StandHours", "StckOptLev", "WorkLifeBal")
 employee_factor %<>% mutate_each(funs(factor(.)), factor_cols)
 
+# Create data frame where all variables are numeric.
 employee_numeric <- data.frame(employee_factor)
 employee_numeric %<>% mutate_if(is.factor, as.numeric)
 
@@ -194,6 +196,8 @@ employee_numeric <- employee_numeric[ , !(names(employee_numeric) %in% drop)]
 As shown in a bar graph above, the Over 18 variable indicates that all employees are at least 18 years old. Furthermore, its total count matches the total number of observations. The minimum age (shown below), 18, confirms that there are no underage employees in the data set.
 
 Before proceeding further, any variables with no variation (Employee Count, Over 18, and Standard Hours) can be removed because they have no useful information for predictive modeling. Employee ID can also be removed because observations can be tracked by other means. This results in a data frame of 1,470 rows and 31 columns.
+
+
 
 # 3. Preliminary Analysis
 
@@ -373,7 +377,7 @@ plot(lm1)
 
 ```
 
-A moderate positive correlation (Pearson's r = 0.498) exists between age and monthly income. Drawing a scatterplot between the two shows a general upward trend in income as age increases, and the best-fitting regression line has a positive slope. However, a linear relationship may not be an optimal model for these variables.
+A moderate positive correlation (Pearson's r = 0.498) exists between age and monthly income. Drawing a scatterplot between the two shows a general upward trend in income as age increases, and the best-fitting regression line has a positive slope. However, a linear relationship may not necessarily be an optimal model for these variables.
 
 ```{r income-vs-others}
 
@@ -414,7 +418,7 @@ ggplot(employee, aes(x=YrsAtComp, y=MnthInc)) +
 
 ## Rates & Income
 
-The data set contains four variables related to money: Hourly Rate, Daily Rate, Monthly Rate, and Monthly Income. Their data definitions are not well-defined, but it can be reasonably assumed that the "Rate" variables relate to wages earned over the indicated unit of time and the "Income" variable translates to monthly take-home pay. If this is the case, can a model can be built to describe the relationship between them?
+The data set contains four variables related to money: Hourly Rate, Daily Rate, Monthly Rate, and Monthly Income. Their data definitions are not well-defined, but it can be reasonably assumed that the "Rate" variables relate to wages earned over the indicated unit of time and the "Income" variable translates to monthly take-home pay. If this is the case, can a model be built to describe the relationship between them?
 
 ```{r rate-income1, message=F, warning=F}
 
@@ -459,66 +463,85 @@ For all observations, Monthly Rate is greater than Daily Rate, which in turn is 
 
 ## Job-Specific Trends
 
+Employees in this data set fall into nine different job roles. Do some trends apply to certain jobs more than others?
+
 ```{r job-role}
 
-# Relationship between job role and monthly income.
-job_mnthinc <- employee_factor %>%
-  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=MnthInc, group=JobRole, fill=JobRole)) +
-  geom_boxplot() + 
-  coord_flip() +
-  ylab("Monthly Income ($)") + 
-  scale_fill_brewer(palette="Paired") +
-  theme(axis.text.x=element_text(size=6, angle=45, vjust=1, hjust=1),
-        axis.text.y=element_text(size=6),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank(),
-        legend.position="right")
+# Distinct colors, borrowed from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
+jobcolors <- c("#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFEF45")
 
-# Relationship between job role and years at current company.
-job_yearscomp <- employee_factor %>%
-  ggplot(aes(x=reorder(JobRole, desc(JobRole)), y=YrsAtComp, group=JobRole)) +
-  geom_boxplot() +
-  coord_flip() +
-  ylab("Years at Current Company") +
-  scale_fill_brewer(palette="Paired") +
-  theme(axis.text.x=element_text(size=6, angle=45, vjust=1, hjust=1),
-        axis.text.y=element_text(size=6),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank(),
-        legend.position="none")  
+# Function that ggplots boxplots. Takes nominal groups on x-axis. Prefers continuous variable on y-axis.
+ContVsNomBoxplots <- function(df, xvar="groups", yvar="continuous") {
+  ggplot(df, aes_string(x=xvar, y=yvar, group=xvar, fill=xvar)) +
+    geom_boxplot() +
+    scale_fill_manual(values=jobcolors) +
+    stat_summary(fun.y=mean, color="black", geom="point", shape=5, size=2) +
+    theme(axis.text.x=element_blank(),
+          axis.text.y=element_text(size=6),
+          axis.ticks=element_blank(),
+          axis.title=element_blank(),
+          legend.justification="top",
+          legend.position="right",
+          plot.title = element_text(hjust = 0.5))
+}
 
 
-# Relationship between job role and attrition.
-job_att <- ggplot(employee_factor, aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
-  geom_bar(aes(fill=Attrition), position="fill") +
-  coord_flip() +
-  ylab("Cumulative Proportion") +
-  scale_fill_manual("Attrition", values=c("Yes"="indianred3", "No"="seagreen3")) +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank(),
-        legend.position="top")
+ContVsNomBoxplots(employee_factor, "JobRole", "MnthInc") + 
+  ggtitle("Monthly Income") + theme(legend.position="none")
 
 
-job_co_worked <- ggplot(employee, aes(x=JobRole, y=NumCoWorked, group=JobRole)) +
-  geom_boxplot() + coord_flip() +
-  xlab("Job Role") + ylab("Number of Companies Worked") + ylim(c(0,10)) + ggtitle("Work History by Job")
+ContVsNomBoxplots(employee_factor, "JobRole", "PcntSalInc") +
+  ggtitle("Percent Salary Increase") + theme(legend.position="none")
 
-job_salinc <- ggplot(employee, aes(x=JobRole, y=PcntSalInc)) +
-  geom_boxplot() + coord_flip() +
-  xlab("Job Role") + ylab("Percent Salary Increase") + ggtitle("Yearly Raise by Job")
+ContVsNomBoxplots(employee_factor, "JobRole", "Age") +
+  ggtitle("Age") + theme(legend.position="none")
+
+ContVsNomBoxplots(employee_factor, "JobRole", "DistFromHme") +
+  ggtitle("Distance From Home") + theme(legend.position="none")
+
+ContVsNomBoxplots(employee_factor, "JobRole", "NumCoWorked") +
+  ggtitle("Number of Companies Worked") + theme(legend.position="none") + scale_y_continuous(breaks=seq(0,10, by=2))
+
+ContVsNomBoxplots(employee_factor, "JobRole", "TotalWrkYrs") +
+  ggtitle("Total Work Years") + theme(legend.position="none")
+
+ContVsNomBoxplots(employee_factor, "JobRole", "YrsAtComp") +
+  ggtitle("Years at Current Company") + theme(legend.position="none")
+
+ContVsNomBoxplots(employee_factor, "JobRole", "YrsCurrRole") +
+  ggtitle("Years in Current Role") + theme(legend.position="none")
+
+ContVsNomBoxplots(employee_factor, "JobRole", "YrsWtCurMgr") +
+  ggtitle("Years with Current Manager") + theme(legend.position="none")
 
 
-#grid.arrange(job_mnthinc, job_yearscomp, job_att, job_co_worked, job_salinc, ncol=2)
-
-legend <- get_legend(job_mnthinc)
-plot_grid(job_mnthinc +theme(legend.position="none"), job_yearscomp, legend, align='vh', labels=c("A","B"), hjust=-1, nrow=1)
+# # Relationship between job role and attrition.
+# job_att <- ggplot(employee_factor, aes(x=reorder(JobRole, desc(JobRole)), y=..count..)) +
+#   geom_bar(aes(fill=Attrition)) +
+#   coord_flip() +
+#   ylab("Cumulative Proportion") +
+#   scale_fill_manual("Attrition", values=c("Yes"="indianred3", "No"="seagreen3")) +
+#   theme(axis.text.x=element_text(size=8),
+#         axis.text.y=element_text(size=8),
+#         axis.ticks.y = element_blank(),
+#         axis.title.x = element_text(size=10),
+#         axis.title.y = element_blank(),
+#         legend.position="top")
+# 
+# 
+# 
+# #grid.arrange(job_mnthinc, job_yearscomp, job_att, job_co_worked, job_salinc, ncol=2)
+# 
+# legend <- get_legend(job_mnthinc)
+# plot_grid(job_mnthinc +theme(legend.position="none"), job_yearscomp, legend, align='vh', labels=c("A","B"), hjust=-1, nrow=1)
+# 
+# job_att
 
 ```
+
+```{r job}
+```
+
 
 ```{r job-stackedbars}
 
@@ -793,8 +816,47 @@ grid.arrange(att_bustrav, att_bustrav2, ncol=2)
 # Attrition and work-life balance.
 
 
+#attrited.atCoLessThan2Yrs
+ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
+  geom_bar(aes(fill=WorkLifeBal)) +
+  coord_flip() +
+  ylab("Count") +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
 
+ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
+  geom_bar(aes(fill=WorkLifeBal), position="fill") +
+  coord_flip() +
+  ylab("Percentage") +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
 
+ggplot(attrited.atCoLessThan2Yrs, aes(x=WorkLifeBal, y=..count..)) +
+  geom_bar(aes(fill=Overtime)) +
+  coord_flip() +
+  ylab("Count") +
+  scale_fill_manual(values=attcol)
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
+ggplot(attrited.atCoLessThan2Yrs, aes(x=Overtime, y=..count..)) +
+  geom_bar(aes(fill=WorkLifeBal), position="fill") +
+  coord_flip() +
+  ylab("Count") +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
+  
 ```
 
 ```{r attrition-plots-history}
