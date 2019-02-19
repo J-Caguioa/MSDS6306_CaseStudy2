@@ -741,12 +741,31 @@ attrition_legend <- get_legend(att_age_a)
 # Attrition and Age density plot.
 att_age <- ContDensity(employee_factor, "Age", "Attrition") +
   ggtitle("Age") + theme(legend.position="none")
-  
+
+NomBar <- function(df, xvar="group1", yvar="group2") {
+  ggplot(df, aes_string(x=xvar, y=..count.., fill=yvar)) +
+    geom_bar(position="dodge", stat="identity")
+}
+
+#NomBar(employee_factor, "Gender", "Attrition")
+#ggplot(employee_factor, aes_string(x=Gender, y=..count..)) +
+ #   geom_bar(position="dodge", stat="identity")
+
+ggplot(employee_factor, aes(x=BusTravel, y=..count..)) +
+  geom_bar(aes(fill=Attrition), position="dodge") +
+  coord_flip() +
+  ylab("Percentage") +
+  scale_fill_manual(values=attcol) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
+
 # Attrition and gender.
 
 # Attrition and marital status.
 
-# Attrition and education level.
 
 # Attrition and education field.
 
@@ -757,16 +776,26 @@ grid.arrange(att_age, ncol=2)
 ```{r attrition-table}
 
 t(ddply(employee_factor, .(Attrition), summarize,
-      "Education"=SimpleMean(Education),
-      "Environment Satisfaction"=SimpleMean(EnvironSat),
-      "Job Involvement"=SimpleMean(JobInvolvemt),
-      "Job Level"=SimpleMean(JobLevel),
-      "Job Satisfaction"=SimpleMean(JobSat),
-      "Performance Rating"=SimpleMean(PerfRating),
-      "Relation Satisfaction"=SimpleMean(RelationSat),
-      "Stock Option Level"=SimpleMean(StckOptLev),
-      "Work Life Balance"=SimpleMean(WorkLifeBal))) %>%
-  kable(caption="Attrition: Means for Interval Variables", align="c") %>%
+        "Age"=SimpleMean(Age),
+        "Distance From Home"=SimpleMean(DistFromHme),
+        "Education"=SimpleMean(Education),
+        "Environment Satisfaction"=SimpleMean(EnvironSat),
+        "Job Involvement"=SimpleMean(JobInvolvemt),
+        "Job Level"=SimpleMean(JobLevel),
+        "Job Satisfaction"=SimpleMean(JobSat),
+        "Monthly Income"=SimpleMean(MnthInc),
+        "Percent Salary Increase"=SimpleMean(PcntSalInc),
+        "Performance Rating"=SimpleMean(PerfRating),
+        "Relationship Satisfaction"=SimpleMean(RelationSat),
+        "Stock Option Level"=SimpleMean(StckOptLev),
+        "Total Working Years"=SimpleMean(TotalWrkYrs),
+        "Training Times Last Year"=SimpleMean(TrainPrevYr),
+        "Work Life Balance"=SimpleMean(WorkLifeBal),
+        "Years At Company"=SimpleMean(YrsAtComp),
+        "Years In Current Role"=SimpleMean(YrsCurrRole),
+        "Years Since Last Promotion"=SimpleMean(YrsSncPromo),
+        "Years With Current Manager"=SimpleMean(YrsWtCurMgr))) %>%
+  kable(caption="Attrition: Means for Numeric Variables", align="c", table.attr="style='width:50%;'") %>%
   kable_styling(bootstrap_options=c("striped", "hover", "condensed"), font_size=7)
 
 ```
@@ -788,7 +817,7 @@ grid.arrange(att_monthlyincome, att_salaryincrease, attrition_legend, ncol=2)
 
 # Attrition and business travel.
 att_bustrav <- ggplot(employee_factor, aes(x=BusTravel, y=..count..)) +
-  geom_bar(aes(fill=Attrition), position="fill") +
+  geom_bar(aes(fill=Attrition), position="dodge") +
   coord_flip() +
   ylab("Percentage") +
   scale_fill_manual(values=attcol) +
@@ -1012,12 +1041,15 @@ print(employee_rf)
 rfImpVar <- round(randomForest::importance(employee_rf), 2)
 rfImpVar[order(rfImpVar[,3], decreasing=T),]
 
+predict_rf <- predict(employee_rf, newdata=test_subset, type="class")
+confusionMatrix(test_subset$Attrition, predict_rf, positive="Yes")
+
 ```
 
 ```{r kmeans}
 
-#employee_kmeans <- kmeans(employee_factor, centers=5, nstart=20)
-
+# employee_kmeans <- kmeans(employee_numeric, centers=5, nstart=20)
+# print(employee_kmeans)
 
 ```
 
@@ -1025,49 +1057,38 @@ rfImpVar[order(rfImpVar[,3], decreasing=T),]
 
 One final question of interest posed is whether life satisfaction can be related to this data set. None of the original 35 variables directly address life satisfaction (i.e., the employees were not explicitly asked to rate life satisfaction). Furthermore, criteria for life satisfaction likely varies between employees and some may not even be captured by any of the available variables (e.g., quality of relationships with family and friends, status of physical and mental health, etc). Therefore, the following analysis using the original data set is purely speculative. 
 
-The three variables containing "satisfaction" in their name (Environment Satisfaction, Job Satisfaction, and Relationship Satisfaction) provide a reasonable starting point. Work Life Balance also seems sound. Incidentally, these are all variables in which employees were asked to rate their feelings on a scale of 1 to 4.
+We define a Life Satisfaction variable by averaging Job Satisfaction, Relationship Satisfaction, and Work Life Balance, preexisting variables that capture some aspects of employees' lives both in and out of work. Conveniently, these are all variables in which employees were asked to rate their feelings on a scale of 1 to 4; an actual Life Satisfaction question would likely be answered in a similar fashion. Investigating whether this created variable varies over Age, Monthly Income, and Gender seems like a natural line of inquiry.
 
-If career success were a major contributor to life satisfaction, several of the available variables may be useful. Education, Job Level, Monthly Income, and Total Working Years may capture some general job progression.
+```{r life-satisfaction1, message=F, warning=F}
 
-```{r life-satisfaction1, message=F, results="hide", warning=F}
+# Collect variables used to calculate life satisfaction. Then, average them to create Life Satisfaction variable.
+satisfaction <- c("JobSat", "WorkLifeBal", "RelationSat")
+employee_factor$LifeSat <- rowMeans(employee_factor[ , satisfaction])
 
-# satisfy_var <- c("Age", "Attrition", "BusTravel", "EnvironSat", "JobInvolvemt", "JobSat", "MaritalStat", "MnthInc", "RelationSat", "TotalWrkYrs", "WorkLifeBal")
-# employee_satisfaction <- employee_factor[ , (names(employee_factor) %in% satisfy_var)]
-# dist_matrix <- dist(employee_satisfaction)
-# employee_hclust <- hclust(d = dist_matrix)
-# cutree(employee_hclust, h=6)
-# plot(employee_hclust)
+# Function that produces ggplot jittered scatter plots. Intended continuous variable on x-axis, discrete variable on y-axis, grouping variable for color.
+DiscVsContScatter <- function(df, xvar="cont", yvar="disc", groupvar="group") {
+  ggplot(df, aes_string(x=xvar, y=yvar, color=groupvar)) +
+    geom_jitter(alpha=0.3, width=0.1) +
+    theme(axis.ticks=element_blank(),
+          plot.title=element_text(hjust=0.5)) +
+    geom_smooth(method="lm", se=T, level=0.95)
+}
 
-```
+# Age and Life Satisfaction jittered scatter plot.
+DiscVsContScatter(employee_factor, "Age", "LifeSat", "Gender") +
+  xlab("Age") + ylab("Life Satisfaction") + 
+  ggtitle("Does Life Satisfaction Increase With Age?")
 
-```{r life-satisfaction2}
-
-# Collect variables used to calculate life satisfaction. Then, aggregate them to create Life Satisfaction variable.
-satisfaction <- c("EnvironSat", "JobSat", "RelationSat", "WorkLifeBal")
-employee_numeric$LifeSat <- rowMeans(employee_numeric[ , satisfaction])
-
-
-ggplot(employee_numeric, aes(x=Age, y=LifeSat)) +
-  geom_point(alpha=0.3) +
-  xlab("Age (years)") + ylab("Life Satisfaction") + ggtitle("Life Satisfaction Tester") +
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(hjust = 0.5)) +
-  geom_smooth(method = "lm",
-              se = F,
-              level = 0.95)
-
-ggplot(employee_numeric, aes(x=MnthInc, y=LifeSat)) +
-  geom_point(alpha=0.3) +
-  xlab("Monthly Income") + ylab("Life Satisfaction") + ggtitle("Life Satisfaction Tester") +
-  theme(axis.ticks = element_blank(),
-        plot.title = element_text(hjust = 0.5)) +
-  geom_smooth(method = "lm",
-              se = F,
-              level = 0.95)
+# Monthly Income and Life Satisfaction jittered scatter plot.
+DiscVsContScatter(employee_factor, "MnthInc", "LifeSat", "Gender") +
+  xlab("Monthly Income") + ylab("Life Satisfaction") +
+  ggtitle("Does Money Buy Life Satisfaction?")
 
 ```
 
+In the original data definitions, the Satisfaction variables were defined on a 1-4 scale of Low-Medium-High-Very High, while Work-Life Balance was defined as Bad-Good-Better-Best. The scales seem similar enough that our defined Life Satisfaction variable can take on the Low-Medium-High-Very High interpretation.
 
+The linear regression slopes are relatively flat, which could be interpreted in a few different ways. Perhaps Life Satisfaction remains relatively stable across the ranges of Age and Monthly Income. Or maybe no correlation actually exists. Our defined Life Satisfaction variable might not even adequately capture what we want. 
 
 # Conclusion
 
