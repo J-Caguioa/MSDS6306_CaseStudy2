@@ -608,10 +608,11 @@ clean_bar_theme <- theme(axis.text=element_text(size=7),
                          axis.title.y=element_blank(),
                          axis.ticks=element_blank(),
                          legend.justification="left",
-                         legend.key.size=unit(1,"line"),
+                         legend.key.size=unit(0.2, "cm"),
                          legend.text=element_text(size=5),
                          legend.title=element_text(size=10),
                          legend.position="top",
+                         plot.margin=unit(c(0,1,0.5,0.5),units="line"),
                          plot.title=element_text(size=7))
 
 # Unable to abstract function call to table.
@@ -623,6 +624,7 @@ job_attrition <- data.frame(with(employee_factor, table(JobRole, Attrition))) %>
   coord_flip() +
   ylab("Frequency") +
   scale_fill_manual("Attrition", values=attcol) +
+  guides(fill=guide_legend(title.position="left", ncol=1)) +
   clean_bar_theme
 
 # Job Role and Business Travel bar graphs.
@@ -633,6 +635,7 @@ job_travel <- data.frame(with(employee_factor, table(JobRole, BusTravel))) %>%
   coord_flip() +
   ylab("Frequency") +
   scale_fill_manual("Business Travel", values=softcolors) +
+  guides(fill=guide_legend(title.position="left", ncol=1)) +
   clean_bar_theme
 
 # Job Role and Department bar graphs.
@@ -642,7 +645,8 @@ job_dept <- data.frame(with(employee_factor, table(JobRole, Department))) %>%
   geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
   coord_flip() +
   ylab("Frequency") +
-  scale_fill_manual("Department", values=softcolors) +
+  scale_fill_manual("Department", values=softcolors[4:6]) +
+  guides(fill=guide_legend(title.position="left", ncol=1)) +
   clean_bar_theme
 
 # Job Role and Gender bar graphs.
@@ -652,6 +656,7 @@ job_gender <- data.frame(with(employee_factor, table(JobRole, Gender))) %>%
   geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
   coord_flip() +
   ylab("Frequency") +
+  guides(fill=guide_legend(title.position="left", ncol=1)) +
   clean_bar_theme
 
 # Job Role and Marital Status bar graphs.
@@ -661,7 +666,8 @@ job_marital <- data.frame(with(employee_factor, table(JobRole, MaritalStat))) %>
   geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
   coord_flip() +
   ylab("Frequency") +
-  scale_fill_manual("Marital Status", values=softcolors) +
+  scale_fill_manual("Marital Status", values=softcolors[7:9]) +
+  guides(fill=guide_legend(title.position="left", ncol=1)) +
   clean_bar_theme
 
 # Job Role and Overtime bar graphs.
@@ -672,16 +678,58 @@ job_overtime <- data.frame(with(employee_factor, table(JobRole, Overtime))) %>%
   coord_flip() +
   ylab("Frequency") +
   scale_fill_manual("Overtime", values=attcol) +
+  guides(fill=guide_legend(title.position="left", ncol=1)) +
   clean_bar_theme
 
 grid.arrange(job_attrition, job_travel, job_dept, job_gender, job_marital, job_overtime, ncol=2)
 
 ```
 
-* Research Directors (2.50%), Managers (4.90%), Healthcare Representatives (6.87%), and Manufacturing Directors (6.89%) have the lowest attrition rates. All other roles have attrition rates near or exceeding the sample's 16.12%. In descending order: Sales Representatives (39.75%), Laboratory Technicians (23.93%), Human Resources (23.07%), Sales Executives (17.48%), and Research Scientists (16.09%).
-* 
-* Sales Representatives (45.78%) have the highest percentage of singles. Research Directors (28.75%), Manufacturing Directors (27.48%), and Healthcare Representatives (25.95%) have the highest divorce rates.
+```{r jobrole5}
+
+job_att_percent_bar <- employee_factor %>%
+  group_by(JobRole, Attrition) %>%
+  dplyr::summarise(n=n()) %>%
+  dplyr::mutate(freq=round(100*n/sum(n),2)) %>%
+  subset(Attrition=="Yes") %>%
+  ggplot(aes(x=reorder(JobRole, freq), y=freq)) +
+  geom_bar(stat="identity", aes(fill=JobRole)) +
+  coord_flip() +
+  scale_fill_manual(values=hardcolors) +
+  geom_text(aes(x=JobRole, y=freq, group=freq, label=freq), size=2) +
+  ggtitle("Attrition Percentage By Job Role") +
+  theme(axis.text=element_text(size=7),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=8))
+
+job_ot_percent_bar <- employee_factor %>%
+  group_by(JobRole, Overtime) %>%
+  dplyr::summarise(n=n()) %>%
+  dplyr::mutate(freq=round(100*n/sum(n),2)) %>%
+  subset(Overtime=="Yes") %>%
+  ggplot(aes(x=reorder(JobRole, freq), y=freq)) +
+  geom_bar(stat="identity", aes(fill=JobRole)) +
+  coord_flip() +
+  scale_fill_manual(values=hardcolors) +
+  geom_text(aes(x=JobRole, y=freq, group=freq, label=freq), size=2) +
+  ggtitle("Overtime Percentage By Job Role") +
+  theme(axis.text=element_text(size=7),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=8))
+
+grid.arrange(job_att_percent_bar, job_ot_percent_bar, ncol=2)
+
+```
+
+* Management positions (Manager, Manufacturing Director, Research Director) are among those with the lowest attrition rates. Aside from Healthcare Representative, all other roles have attrition rates near or exceeding the sample's 16.12%.
 * Human Resources personnel and some Managers (codified as levels 2 and 4 of Job Role) are in Human Resources (codified as level 1 of Department). Some Managers, plus all Sales Executives and Sales Representatives (levels 4, 8, and 9, of Job Role) are in Sales (level 3 of Department). Some Managers, plus the remaining jobs (levels 1 and 3-7) are in Research & Development (level 2 of Department). In other words, factor numbers for Job Role generally correlate with factor numbers for Department, explaining the observation from the correlogram.
+* Within most roles, the gender ratio is relatively proportionate to the Male:Female ratio (60:40) in the dataset. The biggest deviations in either direction are Managers (nearly 50:50) and Human Resources (70:30).
+* Sales Representatives (45.78%) have the highest percentage of singles. Research Directors (28.75%), Manufacturing Directors (27.48%), and Healthcare Representatives (25.95%) have the highest divorce rates.
+* For the sample overall, the rate of employees who work Overtime is 28.3%. Research Scientists, who reported the highest mean Job Involvement, also have the highest Overtime ratio.
 
 ## Predicting Attrition
 
@@ -700,20 +748,51 @@ ggplot(employee_factor, aes(x="", y="", fill=Attrition)) +
 
 ```
 
-In this data set `r round(mean(employee_factor$Attrition=="Yes")*100, digits=2)`%, or `r sum(employee_factor$Attrition=="Yes")` of the 1470 employees attrited. Analyzing statistics and plots can help develop the profile of this type of employee.
+In this data set `r round(mean(employee_factor$Attrition=="Yes")*100, digits=2)`%, or `r sum(employee_factor$Attrition=="Yes")` of the 1470 employees attrited. Analyzing statistics and plots can help develop the profile of the type of employee who left, especially compared to those who stayed.
 
-```{r attrition2}
+```{r attrition2, include=F, results="hide", fig.show="hide"}
 
-# Subset data and retrieve summary statistics on employees who attrited.
-attrited_summary <- data.frame(do.call('rbind', lapply(attrited, function(x) if(is.numeric(x)) round(summary(x),2))))
-attrited_summary$Mean <- round(attrited_summary$Mean, digits=2)
-colnames(attrited_summary) <- c("Minimum", "1st Quartile", "Median", "Mean", "3rd Quartile", "Maximum")
-kable(attrited_summary, row.names = T,
-      caption = "Summary Statistics of People Who Left", 
-      table.attr="style='width:90%;'") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+# Different table of statistics favored. Code saved for reuse.
+# # Subset data and retrieve summary statistics on employees who attrited.
+# attrited_summary <- data.frame(do.call('rbind', lapply(attrited, function(x) if(is.numeric(x)) round(summary(x),2))))
+# attrited_summary$Mean <- round(attrited_summary$Mean, digits=2)
+# colnames(attrited_summary) <- c("Minimum", "1st Quartile", "Median", "Mean", "3rd Quartile", "Maximum")
+# kable(attrited_summary, row.names = T,
+#       caption = "Summary Statistics of People Who Left", 
+#       table.attr="style='width:90%;'") %>%
+#   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 
 ```
+
+```{r attrition-table}
+
+t(ddply(employee_factor, .(Attrition), summarize,
+        "Age"=SimpleMean(Age),
+        "Distance From Home"=SimpleMean(DistFromHme),
+        "Education"=SimpleMean(Education),
+        "Environment Satisfaction"=SimpleMean(EnvironSat),
+        "Job Involvement"=SimpleMean(JobInvolvemt),
+        "Job Level"=SimpleMean(JobLevel),
+        "Job Satisfaction"=SimpleMean(JobSat),
+        "Monthly Income"=SimpleMean(MnthInc),
+        "Number of Companies Worked"=SimpleMean(NumCoWorked),
+        "Percent Salary Increase"=SimpleMean(PcntSalInc),
+        "Performance Rating"=SimpleMean(PerfRating),
+        "Relationship Satisfaction"=SimpleMean(RelationSat),
+        "Stock Option Level"=SimpleMean(StckOptLev),
+        "Total Working Years"=SimpleMean(TotalWrkYrs),
+        "Training Times Last Year"=SimpleMean(TrainPrevYr),
+        "Work Life Balance"=SimpleMean(WorkLifeBal),
+        "Years At Company"=SimpleMean(YrsAtComp),
+        "Years In Current Role"=SimpleMean(YrsCurrRole),
+        "Years Since Last Promotion"=SimpleMean(YrsSncPromo),
+        "Years With Current Manager"=SimpleMean(YrsWtCurMgr))) %>%
+  kable(caption="Attrition: Means for Numeric Variables", align="c", table.attr="style='width:50%;'") %>%
+  kable_styling(bootstrap_options=c("striped", "hover", "condensed"), font_size=7)
+
+```
+
+
 
 ```{r attrition-plots-demographics}
 
@@ -773,32 +852,7 @@ grid.arrange(att_age, ncol=2)
 
 ```
 
-```{r attrition-table}
 
-t(ddply(employee_factor, .(Attrition), summarize,
-        "Age"=SimpleMean(Age),
-        "Distance From Home"=SimpleMean(DistFromHme),
-        "Education"=SimpleMean(Education),
-        "Environment Satisfaction"=SimpleMean(EnvironSat),
-        "Job Involvement"=SimpleMean(JobInvolvemt),
-        "Job Level"=SimpleMean(JobLevel),
-        "Job Satisfaction"=SimpleMean(JobSat),
-        "Monthly Income"=SimpleMean(MnthInc),
-        "Percent Salary Increase"=SimpleMean(PcntSalInc),
-        "Performance Rating"=SimpleMean(PerfRating),
-        "Relationship Satisfaction"=SimpleMean(RelationSat),
-        "Stock Option Level"=SimpleMean(StckOptLev),
-        "Total Working Years"=SimpleMean(TotalWrkYrs),
-        "Training Times Last Year"=SimpleMean(TrainPrevYr),
-        "Work Life Balance"=SimpleMean(WorkLifeBal),
-        "Years At Company"=SimpleMean(YrsAtComp),
-        "Years In Current Role"=SimpleMean(YrsCurrRole),
-        "Years Since Last Promotion"=SimpleMean(YrsSncPromo),
-        "Years With Current Manager"=SimpleMean(YrsWtCurMgr))) %>%
-  kable(caption="Attrition: Means for Numeric Variables", align="c", table.attr="style='width:50%;'") %>%
-  kable_styling(bootstrap_options=c("striped", "hover", "condensed"), font_size=7)
-
-```
 
 ```{r attrition-plots-money}
 
@@ -1046,6 +1100,11 @@ confusionMatrix(test_subset$Attrition, predict_rf, positive="Yes")
 
 ```
 
+```{r echo=T, random_forest_predict}
+employee_rf_predict <- predict(employee_rf, newdata=test_subset, type="class")
+table(test_subset$Attrition, employee_rf_predict)
+```
+
 ```{r kmeans}
 
 # employee_kmeans <- kmeans(employee_numeric, centers=5, nstart=20)
@@ -1088,13 +1147,14 @@ DiscVsContScatter(employee_factor, "MnthInc", "LifeSat", "Gender") +
 
 In the original data definitions, the Satisfaction variables were defined on a 1-4 scale of Low-Medium-High-Very High, while Work-Life Balance was defined as Bad-Good-Better-Best. The scales seem similar enough that our defined Life Satisfaction variable can take on the Low-Medium-High-Very High interpretation.
 
-The linear regression slopes are relatively flat, which could be interpreted in a few different ways. Perhaps Life Satisfaction remains relatively stable across the ranges of Age and Monthly Income. Or maybe no correlation actually exists. Our defined Life Satisfaction variable might not even adequately capture what we want. 
+The linear regression slopes are relatively flat, which could be interpreted in a few different ways. Perhaps Life Satisfaction remains relatively stable across the ranges of Age and Monthly Income. Or maybe no correlation actually exists. Our defined Life Satisfaction variable might not even adequately capture what we want.
+
+Although there is very little change in Life Satisfaction as either Age or Monthly Income increases, the separation by Gender shows an interesting result. Though their confidence intervals contain each other, the mean Life Satisfaction indicated by the linear regression line for Males is higher than Females for all Ages in the data set. For Monthly Income, mean Life Satisfaction is higher for Males below \$10,000, but slightly higher for Females at the high end near \$20,000.
+
+Going forward, explicitly asking a survey question about Life Satisfaction would be helpful if DDSAnalytics wants to know that information.
 
 # Conclusion
 
 * Identify three factors contributing to turnover.
-```{r prediction}
-#ourPredict(employee)
-```
 * Identify any existing job-specific trends.
 * Other considerations, such as next steps or other variables needed.
