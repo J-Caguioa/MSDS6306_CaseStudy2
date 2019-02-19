@@ -1046,6 +1046,11 @@ confusionMatrix(test_subset$Attrition, predict_rf, positive="Yes")
 
 ```
 
+```{r echo=T, random_forest_predict}
+employee_rf_predict <- predict(employee_rf, newdata=test_subset, type="class")
+table(test_subset$Attrition, employee_rf_predict)
+```
+
 ```{r kmeans}
 
 # employee_kmeans <- kmeans(employee_numeric, centers=5, nstart=20)
