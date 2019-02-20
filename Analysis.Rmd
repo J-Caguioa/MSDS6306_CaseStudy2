@@ -312,11 +312,13 @@ DDSAnalytics' main question of interest with this data set is to identify factor
 ``` {r correlations1, warning=F}
 
 # Show correlating variables for further investigation.
-corrplot(cor(employee_numeric), type = "upper", tl.col = "black", tl.srt = 45, tl.cex = 0.5, number.cex = 0.3)
+# corrplot(cor(employee_numeric), type = "upper", tl.col = "black", tl.srt = 45, tl.cex = 0.5, number.cex = 0.3, method="number")
+
+corrplot(cor(employee_numeric), type = "upper", tl.col = "black", tl.srt = 45, tl.cex = 0.5, number.cex = 0.3, number.digits=2, method="color", addCoef.col="white")
 
 ```
 
-The above correlogram requires the fully numeric version of the data frame. Any correlations involving a categorical variable with no intrinsic order, such as the strong negative correlation between Marital Status and Stock Option Level, requires more investigation to determine whether the correlation is meaningful or just a byproduct of the numeric coercion. In this plot, darker colors and larger circles are associated with stronger correlations. Hence, the diagonal of each variable against itself is a dark blue circle that fills its cell, representing an expected Pearson's r of 1.
+The above correlogram requires the fully numeric version of the data frame. Any correlations involving a categorical variable with no intrinsic order, such as the strong negative correlation between Marital Status and Stock Option Level, requires more investigation to determine whether the correlation is meaningful or just a byproduct of the numeric coercion. In this plot, stronger colors (that allow viewing of the white text) are associated with stronger correlations. Hence, the diagonal of each variable against itself is dark blue with the expected Pearson's r of 1.
 
 Some of the following relationships stand out on a cursory exploration:
 
@@ -415,12 +417,13 @@ However, an early exploratory histogram showed that Monthly Income is right-skew
 
 ```{r age-income2}
 
-# Log transform income.
+# Log transform income. 
 employee_log <- data.frame(employee_factor)
-employee_log$LogIncome <- log(employee_log$MnthInc)
+employee_log$lMnthInc <- log(employee_log$MnthInc)
+employee_log$MnthInc <- NULL
 
 # Scatterplot on Age, log(Monthly Income), and Gender.
-ggplot(employee_log, aes(x=Age, y=LogIncome, color=Gender)) +
+ggplot(employee_log, aes(x=Age, y=lMnthInc, color=Gender)) +
   geom_point(alpha=0.3) +
   xlab("Age (years)") +
   ylab("log(Monthly Income)") +
@@ -432,14 +435,14 @@ ggplot(employee_log, aes(x=Age, y=LogIncome, color=Gender)) +
               level = 0.95)
 
 # Obtain log-linear model, show residual diagnostics and coefficients.
-lm2 <- lm(LogIncome ~ Age, employee_log)
+lm2 <- lm(lMnthInc ~ Age, employee_log)
 par(mfrow=c(2,2))
 plot(lm2)
 summary(lm2)
 
 ```
 
-The correlation for Age and log(Monthly Income) drops slightly from before, with Pearson's r = `r cor(employee_log$Age, employee_log$LogIncome)`. However, the residual diagnostics look much better. 
+The correlation for Age and log(Monthly Income) drops slightly from before, with Pearson's r = `r cor(employee_log$Age, employee_log$lMnthInc)`. However, the residual diagnostics look much better. 
 
 In any case, there is a definite positive correlation between Age and Monthly Income, supporting the observation made from the correlogram. Linear and log-linear regression models can be created, indicating that mean or median Monthly Income can likely be predicted from Age. 
 
@@ -447,7 +450,7 @@ In any case, there is a definite positive correlation between Age and Monthly In
 
 Employees in this data set fall into nine different job roles. Do some trends apply to certain jobs more than others?
 
-```{r jobrole1, warning=F, message=F}
+```{r jobrole-boxplots1, warning=F, message=F}
 
 # Throwaway graph to obtain common job role legend.
 jobrole_age_a <- ContVsNomBoxplots(employee_factor, "JobRole", "Age") +
@@ -475,7 +478,7 @@ grid.arrange(jobrole_monthincome, jobrole_salaryincrease, jobrole_distancehome, 
 
 On average and as a whole, managers and research directors are older and have a higher monthly income. In a similar vein, sales representatives are younger and make the least. Despite their title, manufacturing directors have a monthly income roughly on par with healthcare representatives and sales executives; these three groups have similar age distributions. Fittingly, these trends provide supporting evidence to the earlier exploration of the correlation between age and monthly income.
 
-```{r jobrole2}
+```{r jobrole-boxplots2}
 
 # Grouping of boxplots involving years as the continuous variable.
 # Job role and total working years boxplots.
@@ -503,7 +506,7 @@ Perhaps correlated with their age and contributing to their higher monthly incom
 
 On the flipside, young sales representatives also stand out for being early in their careers, with the lowest total working years and years with the company as a group.
 
-```{r jobrole3}
+```{r jobrole-table}
 
 # Table summarizing interval variables by job role.
 ddply(employee_factor, .(JobRole), summarize,
@@ -527,7 +530,7 @@ ddply(employee_factor, .(JobRole), summarize,
 * Human resources roles report the highest work-life balance and satisfaction in their relationships, but the lowest job satisfaction.
 * Sales representatives are the least educated and hold the lowest-level jobs. They report the lowest job involvement and second-highest work-life balance, yet the lowest relationship satisfaction.
 
-```{r jobrole4, message=F, warning=F}
+```{r jobrole-barplots1, message=F, warning=F}
 
 # Reusable theme elements common across stacked barplots.
 clean_bar_theme <- theme(axis.text=element_text(size=7),
@@ -625,7 +628,7 @@ grid.arrange(job_gender, job_marital, job_overtime, ncol=2)
 
 ```
 
-```{r jobrole5}
+```{r jobrole-barplots2}
 
 # Percentage within Job Role for Attrition and Overtime.
 job_att_percent_bar <- employee_factor %>%
@@ -672,7 +675,7 @@ grid.arrange(job_att_percent_bar, job_ot_percent_bar, ncol=2)
 
 ## Predicting Attrition
 
-```{r attrition0, fig.width=3, fig.height=3}
+```{r attrition-pie, fig.width=3, fig.height=3}
 
 # Pie graph with ggplot.
 ggplot(employee_factor, aes(x="", y="", fill=Attrition)) +
@@ -691,7 +694,7 @@ In this data set `r round(mean(employee_factor$Attrition=="Yes")*100, digits=2)`
 
 ### Developing the Profile
 
-```{r attrition2, include=F, results="hide", fig.show="hide"}
+```{r attrition-table1, include=F, results="hide", fig.show="hide"}
 
 # Different table of statistics favored. Code saved for reuse.
 # # Subset data and retrieve summary statistics on employees who attrited.
@@ -705,7 +708,7 @@ In this data set `r round(mean(employee_factor$Attrition=="Yes")*100, digits=2)`
 
 ```
 
-```{r attrition-table}
+```{r attrition-table2}
 
 # Compare mean values by Attrition.
 t(ddply(employee_factor, .(Attrition), summarize,
@@ -736,7 +739,7 @@ t(ddply(employee_factor, .(Attrition), summarize,
 
 ```
 
-```{r attrition-plots-density}
+```{r attrition-density}
 
 # Throwaway graph to obtain common Attrition legend.
 att_age_a <- ContDensity(employee_factor, "Age", "Attrition")
@@ -786,7 +789,7 @@ grid.arrange(att_age, att_distance, att_monthlyincome, att_salaryincrease,
 
 ```
 
-```{r attrition-plots-factors}
+```{r attrition-barplots}
 
 # Attrition and Business Travel barplots.
 att_travel_count <- ggplot(employee_factor, aes(x=BusTravel, y=..count..)) +
@@ -985,115 +988,71 @@ Of these factors, which are the biggest determinants for attrition, and is it po
 
 ### Building a Predictive Model
 
-```{r attrition4}
+#### Logistic Regression
 
-# # Stratified sampling on Attrition.
-# set.seed(307)
-# train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.7, list=F)
-# train_subset <- employee_factor[train_rows,]
-# test_subset <- employee_factor[-train_rows,]
-# 
-# # Create task.
-# train_task <- makeClassifTask(data=train_subset, target="Attrition", positive="Yes")
-# test_task <- makeClassifTask(data=test_subset, target="Attrition")
-# 
-# train_task
-# 
-# train_task <- normalizeFeatures(train_task, method="standardize")
-# test_task <- normalizeFeatures(train_task, method="standardize")
-# train_task <- dropFeatures(task=train_task, features=c("EmpId", "StandHours"))
-
-```
-
-```{r attrition_glm}
+```{r attrition-glm}
 
 # Replicable stratified sampling on attrition.
-set.seed(307)
-train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.7, list=F)
+set.seed(123)
+train_rows <- createDataPartition(y=employee_factor$Attrition, p=0.75, list=F)
 train_subset <- employee_factor[train_rows,]
 test_subset <- employee_factor[-train_rows,]
 
-employee_glm <- glm(Attrition~., data=employee_factor, family="binomial")
-summary(employee_glm)
-imp <- as.data.frame(varImp(employee_glm))
-imp <- data.frame(overall = imp$Overall, names=rownames(imp))
-imp[order(imp$overall, decreasing=T),]
+# Create models with no and all predictors as starting/endpoints for automatic variable selection.
+null_model <- glm(Attrition~1, data=train_subset, family="binomial")
+full_model <- glm(Attrition~., data=train_subset, family="binomial")
 
-train_glm <- glm(Attrition~., data=train_subset, family="binomial")
-summary(train_glm)
-imp <- as.data.frame(varImp(train_glm))
-imp <- data.frame(overall = imp$Overall, names=rownames(imp))
-imp[order(imp$overall, decreasing=T),]
+# Build stepwise regression model and classify based on mean probability.
+set.seed(123)
+glmStep_model <- step(null_model, scope=list(lower=null_model, upper=full_model), direction="both", trace=F)
+glmStep_prob <- predict(glmStep_model, newdata=test_subset, type="response")
+prediction_glmStep <- as.factor(ifelse(glmStep_prob > 0.16, "Yes", "No"))
+confusionMatrix(prediction_glmStep, test_subset$Attrition, positive="Yes")
 
-prob <- predict(train_glm, test_subset, type="response")
-test_subset$Pred <- ifelse(prob > 0.141, "Yes", "No")
-mean(test_subset$Pred == test_subset$Attrition)
-
-```
-
-```{r stepwise}
-
-employee_null <- glm(Attrition ~ 1, data=employee_factor, family="binomial")
-employee_full <- glm(Attrition ~ ., data=employee_factor, family="binomial")
-employee_step <- step(employee_null, scope=list(lower=employee_null, upper=employee_full), direction="forward", trace=F)
-step_prob <- predict(employee_step, type="response")
+# View most important predictors for stepwise model.
+glmStep_imp <- as.data.frame(varImp(glmStep_model))
+glmStep_imp <- data.frame(Overall=glmStep_imp$Overall, Predictors=rownames(glmStep_imp))
+glmStep_imp[order(glmStep_imp$Overall, decreasing=T),]
 
 ```
 
-Top via AIC: YrsAtcomp (603.37), YrsCurrRole (604.13), MnthRate (604.18), PerfRating (604.25), Age (604.51)
-Invalidate the above. Need to change to using version of employee_factor with certain variables dropped.
 
-```{r caret-stepwise}
+```{r attrition-knn}
 
+# Create k-nearest neighbors model on training data, test on testing data.
 set.seed(123)
 train_control <- trainControl(method="cv", number=10)
-forward <- train(Attrition ~ ., data=employee_numeric, method="leapSeq", tuneGrid=data.frame(nvmax=1:10), trControl = train_control)
-forward$bestTune
-forward$results
-summary(forward$finalModel)
-
-# full <- lm(Attrition ~., data=employee_numeric)
-# steptest <- MASS::stepAIC(full, direction="both", trace=F)
-# summary(steptest)
+knn_model <- train(Attrition~., train_subset, method='knn', trControl=train_control)
+prediction_knn <- predict(knn_model, test_subset)
+confusionMatrix(prediction_knn, test_subset$Attrition, positive="Yes")
 
 ```
 
-```{r cart}
+```{r attrition-cart}
 
-employee_cart <- rpart(Attrition ~ ., data=train_subset, method="class")
-prp(employee_cart)
-printcp(employee_cart)
-
-predict_cart <- predict(employee_cart, newdata=test_subset, type="class")
-table(test_subset$Attrition, predict_cart)
-(351+15)/(nrow(test_subset))
+# Create classification and regression tree model on training data. Print tree visualization and test on testing data.
+set.seed(123)
+cart_model <- rpart(Attrition ~ ., data=train_subset, method="class")
+prp(cart_model)
+printcp(cart_model)
+prediction_cart <- predict(cart_model, newdata=test_subset, type="class")
+confusionMatrix(prediction_cart, test_subset$Attrition, positive="Yes")
 
 ```
 
-```{r decision_trees}
+```{r attrition-randomforest}
 
+# Create random forest model on training data, test on testing data.
 employee_rf <- randomForest(Attrition ~ ., data=train_subset, ntree=200, mtry=5, importance=T, method="class")
 #summary(employee_rf)
-plot(employee_rf)
-print(employee_rf)
+# plot(employee_rf)
+# print(employee_rf)
 
 rfImpVar <- round(randomForest::importance(employee_rf), 2)
 rfImpVar[order(rfImpVar[,3], decreasing=T),]
 
-predict_rf <- predict(employee_rf, newdata=test_subset, type="class")
-confusionMatrix(test_subset$Attrition, predict_rf, positive="Yes")
-
-```
-
-```{r echo=T, random_forest_predict}
-employee_rf_predict <- predict(employee_rf, newdata=test_subset, type="class")
-table(test_subset$Attrition, employee_rf_predict)
-```
-
-```{r kmeans}
-
-# employee_kmeans <- kmeans(employee_numeric, centers=5, nstart=20)
-# print(employee_kmeans)
+prediction_rf <- predict(employee_rf, newdata=test_subset, type="class")
+confusionMatrix(test_subset$Attrition, prediction_rf, positive="Yes")
 
 ```
 
