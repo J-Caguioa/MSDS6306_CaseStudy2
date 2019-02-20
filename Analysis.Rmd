@@ -7,7 +7,7 @@ output:
     theme: default
     highlight: tango
     toc: true
-    toc_depth: 3
+    toc_depth: 4
     toc_float:
       collapsed: false
 
@@ -18,17 +18,67 @@ knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 999)
 
 # Packages used.
-package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic", "magrittr", "caret", "randomForest", "reshape", "gridExtra", "GGally", "purrr", "cowplot", "rpart", "rpart.plot", "leaps", "plyr")
+package_list <- c("tidyverse", "readxl", "knitr", "mlr", "kableExtra", "corrplot", "ggmosaic", "magrittr", "caret", "randomForest", "reshape", "gridExtra", "GGally", "purrr", "cowplot", "rpart", "rpart.plot", "leaps", "plyr", "grid")
 lapply(package_list, library, character.only=T)
 
 theme_set(theme_bw())
-
-source('src/MLR-2.R')
 
 # Reusable colors for attrition.
 attcol <- c("No"="seagreen3", "Yes"="indianred3")
 # Reusable Likert scale colors.
 likert <- c("1"="indianred3", "2"="bisque1", "3"="olivedrab3", "4"="springgreen3")
+# Distinct colors, borrowed from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
+hardcolors <- c("#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFEF45")
+softcolors <- c("#469990", "#E6BEFF", "#FF496D", "#98F5FF", "#FFFAC8", "#AAFFC3", "#FFD8B1", "#808000", "#9A6324")
+
+# Reused function in tables to clean up outputs on mean.
+SimpleMean <- function(var) {
+  round(mean(var),2)
+}
+
+# Function that produces ggplot boxplots. Takes nominal groups on x-axis. Prefers continuous variable on y-axis.
+ContVsNomBoxplots <- function(df, xvar="groups", yvar="continuous") {
+  ggplot(df, aes_string(x=xvar, y=yvar, group=xvar, fill=xvar)) +
+    geom_boxplot() +
+    scale_fill_manual(values=hardcolors) +
+    stat_summary(fun.y=mean, color="black", geom="point", shape=5, size=2) +
+    guides(fill=guide_legend(title.position="top", title.hjust=0.5, ncol=2, byrow=F)) +
+    theme(axis.text.x=element_blank(),
+          axis.text.y=element_text(size=6),
+          axis.ticks=element_blank(),
+          axis.title=element_blank(),
+          legend.key.size=unit(1,"line"),
+          legend.position="bottom",
+          legend.text=element_text(size=5),
+          legend.title=element_text(size=6),
+          plot.title = element_text(hjust = 0.5, size=8))
+}
+
+# Function that produces ggplot density plots. Takes continuous variable on x-axis. Intended for group as color.
+ContDensity <- function(df, xvar="cont", yvar="groups") {
+  ggplot(df, aes_string(x=xvar, color=yvar)) +
+    geom_density(alpha=0.3) +
+    scale_color_manual(values=attcol) +
+    guides(fill=guide_legend(title.position="top", title.hjust=0.5)) +
+    theme(axis.text.x=element_text(size=6),
+          axis.text.y=element_blank(),
+          axis.ticks=element_blank(),
+          axis.title=element_blank(),
+          legend.key.size=unit(1,"line"),
+          legend.position="bottom",
+          legend.text=element_text(size=5),
+          legend.title=element_text(size=6),
+          plot.title = element_text(hjust = 0.5, size=8))
+}
+
+# Function that produces ggplot jittered scatter plots. Intended continuous variable on x-axis, discrete variable on y-axis, grouping variable for color.
+DiscVsContScatter <- function(df, xvar="cont", yvar="disc", groupvar="group") {
+  ggplot(df, aes_string(x=xvar, y=yvar, color=groupvar)) +
+    geom_jitter(alpha=0.3, width=0.1) +
+    theme(axis.ticks=element_blank(),
+          plot.title=element_text(hjust=0.5)) +
+    geom_smooth(method="lm", se=T, level=0.95)
+}
 
 ```
 
@@ -46,11 +96,7 @@ Our team of data scientists will analyze an existing data set of employee survey
 employee <- read_excel('Data/DDSAnalytics_Data.xlsx', sheet = "HR-employee-attrition Data")
 
 # Obtain dimensions. [#2A]
-employee_dim <- as.matrix(dim(employee))
-rownames(employee_dim) <- c("Rows", "Columns")
-kable(employee_dim, col.names = "Size", row.names = T,
-      caption = "Data Set Dimensions", table.attr="style='width:30%;'") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+dim(employee)
 
 ```
 
@@ -58,7 +104,7 @@ The original data set provided by DDSAnalytics contains observations on 1,470 em
 
 ```{r load2, message=F, warning=F}
 
-# Modify column names. All names less than 12 characters. [#2B]
+# Modify column names. All names less than 12 characters, as requested. [#2B]
 renamed <- read_excel('Data/VariableNames.xlsx')
 colnames(employee) <- renamed$`Modified_Name`
 
@@ -66,8 +112,8 @@ colnames(employee) <- renamed$`Modified_Name`
 # Create data frame where all factor-type variables are converted accordingly.
 employee_factor <- data.frame(employee)
 employee_factor <- employee_factor %>% mutate_if(is.character, as.factor)
-#factor_cols <- c("Education", "EmpCount", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StandHours", "StckOptLev", "WorkLifeBal")
-#employee_factor %<>% mutate_each(funs(factor(.)), factor_cols)
+factor_cols <- c("EmpCount","StandHours")
+employee_factor %<>% mutate_each(funs(factor(.)), factor_cols)
 
 # Create data frame where all variables are numeric.
 employee_numeric <- data.frame(employee_factor)
@@ -75,7 +121,7 @@ employee_numeric %<>% mutate_if(is.factor, as.numeric)
 
 ```
 
-Two versions of the original employee data frame are created. One converts all character variables and select rating-type numeric variables to factors. The other goes a step further and coerces all variables to numeric. Both are used in different ways during the analysis.
+Two versions of the original employee data frame are created. One converts all character variables to factors. The other goes a step further and coerces all variables to numeric. Both are used in different ways during the analysis.
 
 ```{r eda-plots1, message=F, warning=F}
 
@@ -94,7 +140,11 @@ employee_factor %>%
 Quick exploratory plots of all 35 variables on all of the data reveal some useful tidbits right off the bat. The histogram shapes alone show some interesting trends.
 
 * Distance From Home, Percent Salary Increase, Total Working Years, Years At Company, Years In Current Role, Years Since Last Promotion, and Years With Current Manager have similar positively skewed distributions with long right tails. Some of these variables are likely correlated with each other.
+    * A spike exists for year 6 in Years In Current Role (and by extension, likely correlated variables Years With Current Manager and Years At Company), potentially indicating a large influx of employees that year who are still with the company.
 * Employee ID has a maximum value above 2000. The data set contains only 1,470 observations, meaning this may be a subset where other employee data has already been removed.
+* Environment Satisfacion, Job Satisfaction, and Relationship Satisfaction have noticeable proportions of dissatisfied employees (where a score of 1 indicates low satisfaction).
+* Job Level for most employees is 1 or 2.
+* Performance Rating, defined on a scale of 1 to 4, only has scores of 3 and 4 represented.
 
 ```{r eda-plots2, message=F, warning=F}
 
@@ -110,69 +160,11 @@ employee_factor %>%
 
 ```
 
-Do the charts/plots again against just the people that have been attrited
-
-```{r eda-attrited-plots1, message=F, warning=F}
-attrited <- employee_factor[employee_factor$Attrition == "Yes", ]
-
-# Exploratory histograms of continuous variables on attrited 
-attrited %>%
-  keep(is.numeric) %>%
-  gather() %>%
-  ggplot(aes(value), fill=Attrition) +
-    facet_wrap(~ key, scales="free") +
-    geom_histogram() +
-    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
-          axis.text.y=element_text(size=6))
-```
-
-```{r eda-attrited-plots2, message=F, warning=F}
-# Exploratory bar graphs of factor variables.
-attrited %>%
-  keep(is.factor) %>%
-  gather() %>%
-  ggplot(aes(value)) +
-    facet_wrap(~ key, scales="free") +
-    geom_bar() +
-    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
-          axis.text.y=element_text(size=6))
-```
-
-For those that are attrited, focus on the people at company less than 2 years
-
-```{r eda-attrited-lessthan2yearsAtComp, message=F, warning=F}
-attrited.atCoLessThan2Yrs <- attrited[attrited$YrsAtComp < 3,  ]
-
-# Exploratory histograms of continuous variables on attrited 
-attrited.atCoLessThan2Yrs %>%
-  keep(is.numeric) %>%
-  gather() %>%
-  ggplot(aes(value), fill=Attrition) +
-    facet_wrap(~ key, scales="free") +
-    geom_histogram() +
-    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
-          axis.text.y=element_text(size=6))
-```
-
-```{r eda-attrited-lessthan2yearsAtComp2, message=F, warning=F}
-# Exploratory bar graphs of factor variables.
-attrited.atCoLessThan2Yrs %>%
-  keep(is.factor) %>%
-  gather() %>%
-  ggplot(aes(value)) +
-    facet_wrap(~ key, scales="free") +
-    geom_bar() +
-    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
-          axis.text.y=element_text(size=6))
-```
-
 The exploratory bar graphs are similarly informative.
 
-* Department shows that most employees are in Research & Development, followed by Sales. On a related note, Job Role shows most employees are Sales Executives, Research Scientists, or Laboratory Technicians; Education Field shows most have a background in Life Sciences or Medical. Job Level for most is 1 or 2.
-* Employee Count 1 for all employees in the data set because each row corresponds to answers for only one employee.
-* Environment Satisfacion, Job Satisfaction, and Relationship Satisfaction have noticeable proportions of dissatisfied employees.
+* Department shows that most employees are in Research & Development, followed by Sales. On a related note, Job Role shows most employees are Sales Executives, Research Scientists, or Laboratory Technicians; Education Field shows most have a background in Life Sciences or Medical.
+* Employee Count is 1 for all employees in the data set because each row corresponds to answers for only one employee.
 * Over 18 is Yes for all employees (including employees who are 18 years old).
-* Performance Rating, defined on a scale of 1 to 4, only has scores of 3 and 4 represented.
 * Standard Hours is 80 for all employees in the data set. Assuming a standard 40-hour workweek, all of the represented companies use bi-weekly paychecks.
 
 ```{r na}
@@ -182,7 +174,7 @@ colSums(is.na(employee_factor))
 
 ```
 
-None of the quick graphs above threw any errors indicating that missing values were removed before plotting. There are no NA values for any variable. Furthermore, there are no outliers that could indicate entry errors. It seems reasonable to proceed with the assumption that the data set is correct.
+None of the quick graphs above threw any errors indicating that missing values were removed before plotting. There are no NA values for any variable. Furthermore, there are no outliers or unusual observations that could indicate entry errors. It seems reasonable to proceed with the assumption that the data set is correct and relatively clean.
 
 ```{r drop}
 
@@ -204,7 +196,7 @@ Before proceeding further, any variables with no variation (Employee Count, Over
 
 ## 3b. Descriptive stats
 
-The following 2 tables show the descriptive statistics for 7 of the variables which include
+The following 2 tables show the descriptive statistics for 7 of the variables:
 
 + Age
 + Monthly Income (MnthInc)
@@ -231,7 +223,8 @@ kable(summary(descriptiveStats2), col.names=c("Years at Current Role", "Years Si
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-The followng is a histrogram showing the distribution of Age in the company.  Overlayed on top of the histogram is the density curve and can see that the ages are a bit right tailed distributed with a lot of the workforce between 29 and 35 - a relatively young workforce
+The followng is a histrogram showing the distribution of Age in the company.  Overlayed on top of the histogram is the density curve and can see that the ages are a bit right tailed distributed with a lot of the workforce between 29 and 35 - a relatively young workforce.
+
 ```{r echo=T}
 # Histogram - age
 # 
@@ -244,8 +237,8 @@ ggAge = ggAge +labs(title="Histogram for Age", x="Age", y="Density")
 ggAge
 ```
 
+The following is a histrogram of Monthly Income in the company with an overlay of the density curve showing the distribution of income.  The distribution appears to be right skewed with around 300 employees making around $2000 per month.
 
-The following is a histrogram of Monthly Income in the company with an overlay of the density curve showing the distribution of income.  The distribution appears to be right skewed with around 300 employees making around $2000 per month 
 ```{r, echo=T}
 # Histogram - Income
 summary(employee$MnthInc)
@@ -258,7 +251,9 @@ ggIncome
 ```
 
 ## 3c. Frequencies on Gender, Education, Occupation
+
 The table command is used to count the employee data by a specified field type. The gender table shows that 60% of the employees are male in this database.   The education level shows that the highest concentration employees have Bachelor degree follow closely by the Master's degree.   These two positions account for 68% of the overall employee database.
+
 ```{r frequencies}
 
 GenderData<- table(employee$Gender)
@@ -291,7 +286,8 @@ kable(JobRoleData,
 ```
 
 ## 3d. Counts of Management positions
-Our analysis of the data did not base management positions soley on the job grade.  Two tracks for promotion include the individual contributor and management track.   The management track in our analysis includes positions in which employee line management would exist.   Manager, Manufacturing Director and the Research Director would fall into that category. Using this definition 22% of the positions are management.  All of other positions were not considered as management.
+
+Our analysis of the data did not base management positions solely on the job grade.  Two tracks for promotion include the individual contributor and management track.   The management track in our analysis includes positions in which employee line management would exist.   Manager, Manufacturing Director and the Research Director would fall into that category. Using this definition 22% of the positions are management.  All of other positions were not considered as management.
 
 ```{r management}
 
@@ -325,8 +321,8 @@ The above correlogram requires the fully numeric version of the data frame. Any 
 Some of the following relationships stand out on a cursory exploration:
 
 * Age, Job Level, Monthly Income, Total Working Years, Years At Company, Years In Current Role, Years Since Last Promotion, and Years With Current Manager all show moderate to strong positive correlations with each other. This makes intuitive sense, as an older person with a longer career is more likely to hold higher positions and wield more earning potential. (Age and Monthly Income specifically are further explored in the Age and Income section.) By itself, Age also has weaker positive correlations with amount of Education and Number of Companies Worked.
-* Department and Job Role show a strong positive correlation. Though both are categorical variables, the alphabetical organization within both happens to line up such that their numbers trend together, such as Sales Representatives in the Sales department. This is further explored in the Job-Specific Trends section.
-* Hourly Rate, Daily Rate, Monthly Rate, and Monthly Income do not show any correlation. This finding is unexpected, as one would expect these monetary variables to show some sort of relationship. This is further explored in the Rates & Income section.
+* Department and Job Role show a strong positive correlation. Though both are categorical variables, the organization within both happens to line up such that numbers for related levels trend together, such as Sales Representatives in the Sales department. This is further explored in the Job-Specific Trends section.
+* Hourly Rate, Daily Rate, Monthly Rate, and Monthly Income do not show any correlation. This finding is somewhat unexpected, as one would expect these monetary variables to show some sort of relationship. This is further explored in the Rates & Income section.
 * Performance Rating and Percent Salary Increase show a strong positive correlation; those who perform the best are likely given the biggest pay raises. Sure enough, only employees who reported an Oustanding performance rating (4 out of 4) were rewarded with raises above 20%, as shown below.
 
 ```{r performance-payraise}
@@ -405,20 +401,17 @@ ggplot(employee_factor, aes(x=Age, y=MnthInc, color=Gender)) +
               se = F,
               level = 0.95)
 
-# Obtain linear model and show residual diagnostics.
+# Obtain linear model, show residual diagnostics and coefficients.
 lm1 <- lm(MnthInc ~ Age, employee_factor)
 par(mfrow=c(2,2))
 plot(lm1)
+summary(lm1)
 
 ```
 
-A moderate positive correlation (Pearson's r = `r cor(employee_factor$Age, employee_factor$MnthInc)`) exists between age and monthly income. Drawing a scatterplot between the two shows a general upward trend in income as age increases, and the best-fitting regression line has a positive slope. 
+A moderate positive correlation exists between Age and Monthly Income, with Pearson's r = `r cor(employee_factor$Age, employee_factor$MnthInc)`. Drawing a scatterplot between the two shows a general upward trend in income as Age increases, and the best-fitting regression line has a positive slope. 
 
-However, an early exploratory histogram showed that Monthly Income is right-skewed, as is normal for salary distributions. 
-
-
-However, a linear relationship may not necessarily be an optimal model for these variables.
-
+However, an early exploratory histogram showed that Monthly Income is right-skewed, as is normal for salary distributions. Furthermore, residual diagnostic plots show possible violations against linear regression assumptions, particularly in heteroscedasticity (normality is taken care of by the Central Limit Theorem, as this is a large sample). We can attempt a log transformation to try to mitigate heteroscedasticity.
 
 ```{r age-income2}
 
@@ -426,97 +419,35 @@ However, a linear relationship may not necessarily be an optimal model for these
 employee_log <- data.frame(employee_factor)
 employee_log$LogIncome <- log(employee_log$MnthInc)
 
-ggplot(employee_log, aes(x=LogIncome)) +
-  geom_histogram()
-
 # Scatterplot on Age, log(Monthly Income), and Gender.
 ggplot(employee_log, aes(x=Age, y=LogIncome, color=Gender)) +
   geom_point(alpha=0.3) +
   xlab("Age (years)") +
-  ylab("Monthly Income ($)") +
-  ggtitle("Monthly Income Rises with Age") +
+  ylab("log(Monthly Income)") +
+  ggtitle("log(Monthly Income) Rises with Age") +
   theme(axis.ticks = element_blank(),
         plot.title = element_text(hjust = 0.5)) +
   geom_smooth(method = "lm",
-              se = F,
+              se = T,
               level = 0.95)
 
-
-cor(employee_log$Age, employee_log$LogIncome)
-
-```
-
-
-```{r income-vs-others}
-
-# Relationship between education and income.
-ggplot(employee, aes(x=factor(Education), y=MnthInc, group=Education, fill=Education)) +
-  geom_boxplot() +
-  xlab("Level of Education") +
-  ylab("Monthly Income ($)") +
-  ggtitle("Monthly Income and Education") +
-  scale_x_discrete(labels = c("Below College",
-                              "College",
-                              "Bachelor",
-                              "Master",
-                              "Doctor")) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        axis.ticks = element_blank(),
-        legend.position = 'none',
-        plot.title = element_text(hjust = 0.5))
-
-# Relationship between education field and income.
-ggplot(employee, aes(x=EduField, y=MnthInc, group=EduField)) +
-  geom_boxplot() +
-  coord_flip()
-
-# Total working years vs income
-ggplot(employee, aes(x=TotalWrkYrs, y=MnthInc)) +
-  geom_point()
-
-lm2 <- lm(MnthInc ~ TotalWrkYrs, employee)
-cor(employee$TotalWrkYrs, employee$MnthInc)
-# Note: 0.77 cor, R2 ~ 0.597 ***
-
-# Years at company vs income
-ggplot(employee, aes(x=YrsAtComp, y=MnthInc)) +
-  geom_point()
+# Obtain log-linear model, show residual diagnostics and coefficients.
+lm2 <- lm(LogIncome ~ Age, employee_log)
+par(mfrow=c(2,2))
+plot(lm2)
+summary(lm2)
 
 ```
 
+The correlation for Age and log(Monthly Income) drops slightly from before, with Pearson's r = `r cor(employee_log$Age, employee_log$LogIncome)`. However, the residual diagnostics look much better. 
 
+In any case, there is a definite positive correlation between Age and Monthly Income, supporting the observation made from the correlogram. Linear and log-linear regression models can be created, indicating that mean or median Monthly Income can likely be predicted from Age. 
 
 ## Job-Specific Trends
 
 Employees in this data set fall into nine different job roles. Do some trends apply to certain jobs more than others?
 
-```{r function1}
-
-# Distinct colors, borrowed from https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
-hardcolors <- c("#E6194B", "#3CB44B", "#FFE119", "#4363D8", "#F58231", "#911EB4", "#42D4F4", "#F032E6", "#BFEF45")
-softcolors <- c("#469990", "#E6BEFF", "#800000", "#000075", "#FFFAC8", "#AAFFC3", "#FFD8B1", "#808000", "#9A6324")
-
-# Function that produces ggplot boxplots. Takes nominal groups on x-axis. Prefers continuous variable on y-axis.
-ContVsNomBoxplots <- function(df, xvar="groups", yvar="continuous") {
-  ggplot(df, aes_string(x=xvar, y=yvar, group=xvar, fill=xvar)) +
-    geom_boxplot() +
-    scale_fill_manual(values=hardcolors) +
-    stat_summary(fun.y=mean, color="black", geom="point", shape=5, size=2) +
-    guides(fill=guide_legend(title.position="top", title.hjust=0.5, ncol=2, byrow=F)) +
-    theme(axis.text.x=element_blank(),
-          axis.text.y=element_text(size=6),
-          axis.ticks=element_blank(),
-          axis.title=element_blank(),
-          legend.key.size=unit(1,"line"),
-          legend.position="bottom",
-          legend.text=element_text(size=5),
-          legend.title=element_text(size=6),
-          plot.title = element_text(hjust = 0.5, size=8))
-}
-
-```
-
-```{r jobrole1}
+```{r jobrole1, warning=F, message=F}
 
 # Throwaway graph to obtain common job role legend.
 jobrole_age_a <- ContVsNomBoxplots(employee_factor, "JobRole", "Age") +
@@ -574,10 +505,6 @@ On the flipside, young sales representatives also stand out for being early in t
 
 ```{r jobrole3}
 
-SimpleMean <- function(var) {
-  round(mean(var),2)
-}
-
 # Table summarizing interval variables by job role.
 ddply(employee_factor, .(JobRole), summarize,
       Education=SimpleMean(Education),
@@ -620,7 +547,7 @@ clean_bar_theme <- theme(axis.text=element_text(size=7),
 job_attrition <- data.frame(with(employee_factor, table(JobRole, Attrition))) %>%
   ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=Attrition)) +
   geom_bar(aes(weight=Freq, position="stack")) +
-  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  #geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
   coord_flip() +
   ylab("Frequency") +
   scale_fill_manual("Attrition", values=attcol) +
@@ -631,7 +558,7 @@ job_attrition <- data.frame(with(employee_factor, table(JobRole, Attrition))) %>
 job_travel <- data.frame(with(employee_factor, table(JobRole, BusTravel))) %>%
   ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=BusTravel)) +
   geom_bar(aes(weight=Freq, position="stack")) +
-  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  #geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
   coord_flip() +
   ylab("Frequency") +
   scale_fill_manual("Business Travel", values=softcolors) +
@@ -642,10 +569,21 @@ job_travel <- data.frame(with(employee_factor, table(JobRole, BusTravel))) %>%
 job_dept <- data.frame(with(employee_factor, table(JobRole, Department))) %>%
   ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=Department)) +
   geom_bar(aes(weight=Freq, position="stack")) +
-  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  #geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
   coord_flip() +
   ylab("Frequency") +
   scale_fill_manual("Department", values=softcolors[4:6]) +
+  guides(fill=guide_legend(title.position="left", ncol=1)) +
+  clean_bar_theme
+
+# Job Role and Education Field bar graphs.
+job_edufield <- data.frame(with(employee_factor, table(JobRole, EduField))) %>%
+  ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=EduField)) +
+  geom_bar(aes(weight=Freq, position="stack")) +
+  #geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  coord_flip() +
+  ylab("Frequency") +
+  scale_fill_manual("Education Field", values=softcolors[1:6]) +
   guides(fill=guide_legend(title.position="left", ncol=1)) +
   clean_bar_theme
 
@@ -653,7 +591,7 @@ job_dept <- data.frame(with(employee_factor, table(JobRole, Department))) %>%
 job_gender <- data.frame(with(employee_factor, table(JobRole, Gender))) %>%
   ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=Gender)) +
   geom_bar(aes(weight=Freq, position="stack")) +
-  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  #geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
   coord_flip() +
   ylab("Frequency") +
   guides(fill=guide_legend(title.position="left", ncol=1)) +
@@ -663,7 +601,7 @@ job_gender <- data.frame(with(employee_factor, table(JobRole, Gender))) %>%
 job_marital <- data.frame(with(employee_factor, table(JobRole, MaritalStat))) %>%
   ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=MaritalStat)) +
   geom_bar(aes(weight=Freq, position="stack")) +
-  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  #geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
   coord_flip() +
   ylab("Frequency") +
   scale_fill_manual("Marital Status", values=softcolors[7:9]) +
@@ -674,19 +612,22 @@ job_marital <- data.frame(with(employee_factor, table(JobRole, MaritalStat))) %>
 job_overtime <- data.frame(with(employee_factor, table(JobRole, Overtime))) %>%
   ggplot(aes(x=reorder(JobRole, desc(JobRole)), fill=Overtime)) +
   geom_bar(aes(weight=Freq, position="stack")) +
-  geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
+  #geom_text(aes(x=JobRole, y=Freq, label=Freq), position=position_stack(vjust=0.5), size=2) +
   coord_flip() +
   ylab("Frequency") +
   scale_fill_manual("Overtime", values=attcol) +
   guides(fill=guide_legend(title.position="left", ncol=1)) +
   clean_bar_theme
 
-grid.arrange(job_attrition, job_travel, job_dept, job_gender, job_marital, job_overtime, ncol=2)
+# Output plots separately to allow for height expansion.
+grid.arrange(job_attrition, job_travel, job_dept, job_edufield, ncol=2)
+grid.arrange(job_gender, job_marital, job_overtime, ncol=2)
 
 ```
 
 ```{r jobrole5}
 
+# Percentage within Job Role for Attrition and Overtime.
 job_att_percent_bar <- employee_factor %>%
   group_by(JobRole, Attrition) %>%
   dplyr::summarise(n=n()) %>%
@@ -696,14 +637,13 @@ job_att_percent_bar <- employee_factor %>%
   geom_bar(stat="identity", aes(fill=JobRole)) +
   coord_flip() +
   scale_fill_manual(values=hardcolors) +
-  geom_text(aes(x=JobRole, y=freq, group=freq, label=freq), size=2) +
+  geom_text(aes(x=JobRole, y=freq, group=freq, label=paste0(freq,"%")), size=2, hjust=1) +
   ggtitle("Attrition Percentage By Job Role") +
   theme(axis.text=element_text(size=7),
         axis.ticks=element_blank(),
         axis.title=element_blank(),
         legend.position="none",
         plot.title=element_text(size=8))
-
 job_ot_percent_bar <- employee_factor %>%
   group_by(JobRole, Overtime) %>%
   dplyr::summarise(n=n()) %>%
@@ -713,23 +653,22 @@ job_ot_percent_bar <- employee_factor %>%
   geom_bar(stat="identity", aes(fill=JobRole)) +
   coord_flip() +
   scale_fill_manual(values=hardcolors) +
-  geom_text(aes(x=JobRole, y=freq, group=freq, label=freq), size=2) +
+  geom_text(aes(x=JobRole, y=freq, group=freq, label=paste0(freq,"%")), size=2, hjust=1) +
   ggtitle("Overtime Percentage By Job Role") +
   theme(axis.text=element_text(size=7),
         axis.ticks=element_blank(),
         axis.title=element_blank(),
         legend.position="none",
         plot.title=element_text(size=8))
-
 grid.arrange(job_att_percent_bar, job_ot_percent_bar, ncol=2)
 
 ```
 
-* Management positions (Manager, Manufacturing Director, Research Director) are among those with the lowest attrition rates. Aside from Healthcare Representative, all other roles have attrition rates near or exceeding the sample's 16.12%.
-* Human Resources personnel and some Managers (codified as levels 2 and 4 of Job Role) are in Human Resources (codified as level 1 of Department). Some Managers, plus all Sales Executives and Sales Representatives (levels 4, 8, and 9, of Job Role) are in Sales (level 3 of Department). Some Managers, plus the remaining jobs (levels 1 and 3-7) are in Research & Development (level 2 of Department). In other words, factor numbers for Job Role generally correlate with factor numbers for Department, explaining the observation from the correlogram.
-* Within most roles, the gender ratio is relatively proportionate to the Male:Female ratio (60:40) in the dataset. The biggest deviations in either direction are Managers (nearly 50:50) and Human Resources (70:30).
-* Sales Representatives (45.78%) have the highest percentage of singles. Research Directors (28.75%), Manufacturing Directors (27.48%), and Healthcare Representatives (25.95%) have the highest divorce rates.
-* For the sample overall, the rate of employees who work Overtime is 28.3%. Research Scientists, who reported the highest mean Job Involvement, also have the highest Overtime ratio.
+* Management positions (manager, manufacturing director, research director) are among those with the lowest attrition rates. Aside from healthcare representative, all other roles have attrition rates near or exceeding the sample's 16.12%.
+* Human resources personnel and some managers (codified as levels 2 and 4 of Job Role) are in Human Resources (codified as level 1 of Department). Some managers, plus all sales executives and sales representatives (levels 4, 8, and 9, of Job Role) are in Sales (level 3 of Department). Some managers, plus the remaining jobs (levels 1 and 3-7) are in Research & Development (level 2 of Department). In other words, factor numbers for Job Role generally correlate with factor numbers for Department, explaining the observation from the correlogram.
+* Within most roles, the gender ratio is relatively proportionate to the Male:Female ratio (60:40) in the dataset. The biggest deviations in either direction are managers (nearly 50:50) and human resources (70:30).
+* Sales representatives (45.78%) have the highest percentage of singles. Research directors (28.75%), manufacturing directors (27.48%), and healthcare representatives (25.95%) have the highest divorce rates.
+* For the sample overall, the rate of employees who work Overtime is 28.3%. Research scientists, who reported the highest mean Job Involvement, also have the highest Overtime ratio.
 
 ## Predicting Attrition
 
@@ -750,6 +689,8 @@ ggplot(employee_factor, aes(x="", y="", fill=Attrition)) +
 
 In this data set `r round(mean(employee_factor$Attrition=="Yes")*100, digits=2)`%, or `r sum(employee_factor$Attrition=="Yes")` of the 1470 employees attrited. Analyzing statistics and plots can help develop the profile of the type of employee who left, especially compared to those who stayed.
 
+### Developing the Profile
+
 ```{r attrition2, include=F, results="hide", fig.show="hide"}
 
 # Different table of statistics favored. Code saved for reuse.
@@ -766,6 +707,7 @@ In this data set `r round(mean(employee_factor$Attrition=="Yes")*100, digits=2)`
 
 ```{r attrition-table}
 
+# Compare mean values by Attrition.
 t(ddply(employee_factor, .(Attrition), summarize,
         "Age"=SimpleMean(Age),
         "Distance From Home"=SimpleMean(DistFromHme),
@@ -787,31 +729,14 @@ t(ddply(employee_factor, .(Attrition), summarize,
         "Years In Current Role"=SimpleMean(YrsCurrRole),
         "Years Since Last Promotion"=SimpleMean(YrsSncPromo),
         "Years With Current Manager"=SimpleMean(YrsWtCurMgr))) %>%
-  kable(caption="Attrition: Means for Numeric Variables", align="c", table.attr="style='width:50%;'") %>%
-  kable_styling(bootstrap_options=c("striped", "hover", "condensed"), font_size=7)
+  kable(caption="Attrition: Means for Numeric Variables", align="c",
+        table.attr="style='width:50%;'") %>%
+  row_spec(row=1, bold=T, background="#7D7D7D", color="white") %>%
+  kable_styling(bootstrap_options=c("striped", "hover", "condensed"), font_size=8)
 
 ```
 
-
-
-```{r attrition-plots-demographics}
-
-# Function that produces ggplot density plots. Takes continuous variable on x-axis. Intended for group as color.
-ContDensity <- function(df, xvar="cont", yvar="groups") {
-  ggplot(df, aes_string(x=xvar, color=yvar)) +
-    geom_density(alpha=0.3) +
-    scale_color_manual(values=attcol) +
-    guides(fill=guide_legend(title.position="top", title.hjust=0.5)) +
-    theme(axis.text.x=element_text(size=6),
-          axis.text.y=element_blank(),
-          axis.ticks=element_blank(),
-          axis.title=element_blank(),
-          legend.key.size=unit(1,"line"),
-          legend.position="bottom",
-          legend.text=element_text(size=5),
-          legend.title=element_text(size=6),
-          plot.title = element_text(hjust = 0.5, size=8))
-}
+```{r attrition-plots-density}
 
 # Throwaway graph to obtain common Attrition legend.
 att_age_a <- ContDensity(employee_factor, "Age", "Attrition")
@@ -820,147 +745,15 @@ attrition_legend <- get_legend(att_age_a)
 # Attrition and Age density plot.
 att_age <- ContDensity(employee_factor, "Age", "Attrition") +
   ggtitle("Age") + theme(legend.position="none")
-
-NomBar <- function(df, xvar="group1", yvar="group2") {
-  ggplot(df, aes_string(x=xvar, y=..count.., fill=yvar)) +
-    geom_bar(position="dodge", stat="identity")
-}
-
-#NomBar(employee_factor, "Gender", "Attrition")
-#ggplot(employee_factor, aes_string(x=Gender, y=..count..)) +
- #   geom_bar(position="dodge", stat="identity")
-
-ggplot(employee_factor, aes(x=BusTravel, y=..count..)) +
-  geom_bar(aes(fill=Attrition), position="dodge") +
-  coord_flip() +
-  ylab("Percentage") +
-  scale_fill_manual(values=attcol) +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank())
-
-# Attrition and gender.
-
-# Attrition and marital status.
-
-
-# Attrition and education field.
-
-grid.arrange(att_age, ncol=2)
-
-```
-
-
-
-```{r attrition-plots-money}
-
+# Attrition and Distance From Home density plot.
+att_distance <- ContDensity(employee_factor, "DistFromHme", "Attrition") +
+  ggtitle("Distance From Home") + theme(legend.position="none")
 # Attrition and Monthly Income density plot.
 att_monthlyincome <- ContDensity(employee_factor, "MnthInc", "Attrition") +
   ggtitle("Monthly Income") + theme(legend.position="none")
 # Attrition and Percent Salary Increase density plot.
 att_salaryincrease <- ContDensity(employee_factor, "PcntSalInc", "Attrition") +
   ggtitle("Percent Salary Increase") + theme(legend.position="none")
-
-grid.arrange(att_monthlyincome, att_salaryincrease, attrition_legend, ncol=2)
-
-```
-
-```{r attrition-plots-job}
-
-# Attrition and business travel.
-att_bustrav <- ggplot(employee_factor, aes(x=BusTravel, y=..count..)) +
-  geom_bar(aes(fill=Attrition), position="dodge") +
-  coord_flip() +
-  ylab("Percentage") +
-  scale_fill_manual(values=attcol) +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank())
-
-att_bustrav2 <- ggplot(employee_factor, aes(x=BusTravel, y=..count..)) +
-  geom_bar(aes(fill=Attrition)) +
-  coord_flip() +
-  ylab("Count") +
-  scale_fill_manual(values=attcol) +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank())
-
-# Attrition and distance from home.
-att_dist <- ggplot(employee_factor, aes(x=DistFromHme, color=Attrition)) +
-  geom_density(alpha=0.3) +
-  xlab("Distance from Home") +
-  ylab("Density")
-
-# Attrition and department.
-
-# Attrition and job involvement.
-
-# Attrition and job level.
-
-# Attrition and job role.
-
-# Attrition and overtime.
-
-# Attrition and performance rating.
-
-grid.arrange(att_bustrav, att_bustrav2, ncol=2)
-
-```
-
-```{r attrition-plots-likert}
-
-#attrited.atCoLessThan2Yrs
-ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
-  geom_bar(aes(fill=WorkLifeBal)) +
-  coord_flip() +
-  ylab("Count") +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank())
-
-ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
-  geom_bar(aes(fill=WorkLifeBal), position="fill") +
-  coord_flip() +
-  ylab("Percentage") +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank())
-
-ggplot(attrited.atCoLessThan2Yrs, aes(x=WorkLifeBal, y=..count..)) +
-  geom_bar(aes(fill=Overtime)) +
-  coord_flip() +
-  ylab("Count") +
-  scale_fill_manual(values=attcol)
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank())
-ggplot(attrited.atCoLessThan2Yrs, aes(x=Overtime, y=..count..)) +
-  geom_bar(aes(fill=WorkLifeBal), position="fill") +
-  coord_flip() +
-  ylab("Count") +
-  theme(axis.text.x=element_text(size=8),
-        axis.text.y=element_text(size=8),
-        axis.ticks.y = element_blank(),
-        axis.title.x = element_text(size=10),
-        axis.title.y = element_blank())
-  
-```
-
-```{r attrition-plots-history}
-
 # Attrition and Number of Companies Worked density plot.
 att_numcompanies <- ContDensity(employee_factor, "NumCoWorked", "Attrition") +
   ggtitle("Number of Companies Worked") + theme(legend.position="none")
@@ -983,20 +776,214 @@ att_yearspromo <- ContDensity(employee_factor, "YrsSncPromo", "Attrition") +
 att_yearsmanager <- ContDensity(employee_factor, "YrsWtCurMgr", "Attrition") +
   ggtitle("Years With Current Manager") + theme(legend.position="none")
 
-grid.arrange(att_numcompanies, att_totalyears, att_monthlyincome, att_yearscomp, att_yearsrole, att_yearspromo, att_yearsmanager, attrition_legend, ncol=4)
+# Collectively output Attrition density plots to show distributions.
+grid.arrange(att_age, att_distance, att_monthlyincome, att_salaryincrease, 
+             att_numcompanies, att_totalyears, att_monthlyincome, att_yearscomp, 
+             att_yearsrole, att_yearspromo, att_yearsmanager, attrition_legend, 
+             ncol=4, 
+             top=textGrob("Attrition Density Distributions", 
+                          gp=gpar(fontsize=20, fontface="bold")))
 
 ```
 
-From the summary statistics and density and mosaic plots, a general profile emerges on what the typical leaving employee generally looks like compared to an employee who stays:
+```{r attrition-plots-factors}
 
-* Younger (especially in the 20s and 30s) and single
-* Lower job and relationship satisfaction
-* No stock option
-* Live further from work and travel more frequently for business
-* Hold lower job level
-* more likely to be a laboratory technician, research scientist, or sales representative
+# Attrition and Business Travel barplots.
+att_travel_count <- ggplot(employee_factor, aes(x=BusTravel, y=..count..)) +
+  geom_bar(aes(fill=Attrition), position="dodge") +
+  coord_flip() +
+  ggtitle("Business Travel: Counts") +
+  scale_fill_manual(values=attcol) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+att_travel_rate <- employee_factor %>%
+  group_by(BusTravel, Attrition) %>%
+  dplyr::summarise(n=n()) %>%
+  dplyr::mutate(freq=round(100*n/sum(n),2)) %>%
+  subset(Attrition=="Yes") %>%
+  ggplot(aes(x=reorder(BusTravel, freq), y=freq)) +
+  geom_bar(stat="identity", aes(fill=BusTravel)) +
+  coord_flip() +
+  scale_fill_manual(values=softcolors) +
+  geom_text(aes(x=BusTravel, y=freq, group=freq, label=paste0(freq,"%")), size=2, hjust=1) +
+  ggtitle("Business Travel: Attrition Percentage") +
+  theme(axis.text=element_text(size=7),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
 
-Which of these factors are the biggest determinants for attrition?
+# Attrition and Department barplots.
+att_dept_count <- ggplot(employee_factor, aes(x=Department, y=..count..)) +
+  geom_bar(aes(fill=Attrition), position="dodge") +
+  coord_flip() +
+  ggtitle("Department: Counts") +
+  scale_fill_manual(values=attcol) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+att_dept_rate <- employee_factor %>%
+  group_by(Department, Attrition) %>%
+  dplyr::summarise(n=n()) %>%
+  dplyr::mutate(freq=round(100*n/sum(n),2)) %>%
+  subset(Attrition=="Yes") %>%
+  ggplot(aes(x=reorder(Department, freq), y=freq)) +
+  geom_bar(stat="identity", aes(fill=Department)) +
+  coord_flip() +
+  scale_fill_manual(values=softcolors[4:6]) +
+  geom_text(aes(x=Department, y=freq, group=freq, label=paste0(freq,"%")), size=2, hjust=1) +
+  ggtitle("Department: Attrition Percentage") +
+  theme(axis.text=element_text(size=7),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+
+# Attrition and Education Field barplots.
+att_edufield_count <- ggplot(employee_factor, aes(x=EduField, y=..count..)) +
+  geom_bar(aes(fill=Attrition), position="dodge") +
+  coord_flip() +
+  ggtitle("Education Field: Counts") +
+  scale_fill_manual(values=attcol) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+att_edufield_rate <- employee_factor %>%
+  group_by(EduField, Attrition) %>%
+  dplyr::summarise(n=n()) %>%
+  dplyr::mutate(freq=round(100*n/sum(n),2)) %>%
+  subset(Attrition=="Yes") %>%
+  ggplot(aes(x=reorder(EduField, freq), y=freq)) +
+  geom_bar(stat="identity", aes(fill=EduField)) +
+  coord_flip() +
+  scale_fill_manual(values=softcolors[1:6]) +
+  geom_text(aes(x=EduField, y=freq, group=freq, label=paste0(freq,"%")), size=2, hjust=1) +
+  ggtitle("Education Field: Attrition Percentage") +
+  theme(axis.text=element_text(size=7),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+
+# Attrition and Gender barplots.
+att_gender_count <- ggplot(employee_factor, aes(x=Gender, y=..count..)) +
+  geom_bar(aes(fill=Attrition), position="dodge") +
+  coord_flip() +
+  ggtitle("Gender: Counts") +
+  scale_fill_manual(values=attcol) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+att_gender_rate <- employee_factor %>%
+  group_by(Gender, Attrition) %>%
+  dplyr::summarise(n=n()) %>%
+  dplyr::mutate(freq=round(100*n/sum(n),2)) %>%
+  subset(Attrition=="Yes") %>%
+  ggplot(aes(x=reorder(Gender, freq), y=freq)) +
+  geom_bar(stat="identity", aes(fill=Gender)) +
+  coord_flip() +
+  geom_text(aes(x=Gender, y=freq, group=freq, label=paste0(freq,"%")), size=2, hjust=1) +
+  ggtitle("Gender: Attrition Percentage") +
+  theme(axis.text=element_text(size=7),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+
+# Attrition and Marital Status barplots.
+att_marital_count <- ggplot(employee_factor, aes(x=MaritalStat, y=..count..)) +
+  geom_bar(aes(fill=Attrition), position="dodge") +
+  coord_flip() +
+  ggtitle("Marital Status: Counts") +
+  scale_fill_manual(values=attcol) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+att_marital_rate <- employee_factor %>%
+  group_by(MaritalStat, Attrition) %>%
+  dplyr::summarise(n=n()) %>%
+  dplyr::mutate(freq=round(100*n/sum(n),2)) %>%
+  subset(Attrition=="Yes") %>%
+  ggplot(aes(x=reorder(MaritalStat, freq), y=freq)) +
+  geom_bar(stat="identity", aes(fill=MaritalStat)) +
+  coord_flip() +
+  scale_fill_manual(values=softcolors[7:9]) +
+  geom_text(aes(x=MaritalStat, y=freq, group=freq, label=paste0(freq,"%")), size=2, hjust=1) +
+  ggtitle("Marital Status: Attrition Percentage") +
+  theme(axis.text=element_text(size=7),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+
+# Attrition and Overtime barplots.
+att_overtime_count <- ggplot(employee_factor, aes(x=Overtime, y=..count..)) +
+  geom_bar(aes(fill=Attrition), position="dodge") +
+  coord_flip() +
+  ggtitle("Overtime: Counts") +
+  scale_fill_manual(values=attcol) +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+att_overtime_rate <- employee_factor %>%
+  group_by(Overtime, Attrition) %>%
+  dplyr::summarise(n=n()) %>%
+  dplyr::mutate(freq=round(100*n/sum(n),2)) %>%
+  subset(Attrition=="Yes") %>%
+  ggplot(aes(x=reorder(Overtime, freq), y=freq)) +
+  geom_bar(stat="identity", aes(fill=Overtime)) +
+  coord_flip() +
+  scale_fill_manual(values=attcol) +
+  geom_text(aes(x=Overtime, y=freq, group=freq, label=paste0(freq,"%")), size=2, hjust=1) +
+  ggtitle("Overtime: Attrition Percentage") +
+  theme(axis.text=element_text(size=7),
+        axis.ticks=element_blank(),
+        axis.title=element_blank(),
+        legend.position="none",
+        plot.title=element_text(size=10))
+
+# Output combinations of count barplots and percentage barplots. Separated to expand height.
+grid.arrange(att_travel_count, att_travel_rate,
+             att_dept_count, att_dept_rate,
+             att_edufield_count, att_edufield_rate, ncol=2)
+grid.arrange(att_gender_count, att_gender_rate,
+             att_marital_count, att_marital_rate,
+             att_overtime_count, att_overtime_rate,
+             ncol=2)
+
+```
+
+From the averages, density distributions, and barplots, a general profile emerges on what the typical employee who leaves generally looks like compared to an employee who stays:
+
+* Younger, single, less educated
+* Holds lower job level with lower job involvement, lower stock option levels, and lower monthly income
+* Lives further from work, travels for business, and works overtime
+* Less satisfied with environment, job, and relationship; reports lower work-life balance
+* Earlier in career, fewer years with company
+* More likely to be in the human resources or sales departments; more likely to hold sales representative, laboratory technician, or human resources as job role
+
+Of these factors, which are the biggest determinants for attrition, and is it possible to predict whether an employee will leave using them? 
+
+### Building a Predictive Model
 
 ```{r attrition4}
 
@@ -1041,8 +1028,6 @@ imp[order(imp$overall, decreasing=T),]
 prob <- predict(train_glm, test_subset, type="response")
 test_subset$Pred <- ifelse(prob > 0.141, "Yes", "No")
 mean(test_subset$Pred == test_subset$Attrition)
-
-
 
 ```
 
@@ -1124,15 +1109,6 @@ We define a Life Satisfaction variable by averaging Job Satisfaction, Relationsh
 satisfaction <- c("JobSat", "WorkLifeBal", "RelationSat")
 employee_factor$LifeSat <- rowMeans(employee_factor[ , satisfaction])
 
-# Function that produces ggplot jittered scatter plots. Intended continuous variable on x-axis, discrete variable on y-axis, grouping variable for color.
-DiscVsContScatter <- function(df, xvar="cont", yvar="disc", groupvar="group") {
-  ggplot(df, aes_string(x=xvar, y=yvar, color=groupvar)) +
-    geom_jitter(alpha=0.3, width=0.1) +
-    theme(axis.ticks=element_blank(),
-          plot.title=element_text(hjust=0.5)) +
-    geom_smooth(method="lm", se=T, level=0.95)
-}
-
 # Age and Life Satisfaction jittered scatter plot.
 DiscVsContScatter(employee_factor, "Age", "LifeSat", "Gender") +
   xlab("Age") + ylab("Life Satisfaction") + 
@@ -1152,6 +1128,109 @@ The linear regression slopes are relatively flat, which could be interpreted in 
 Although there is very little change in Life Satisfaction as either Age or Monthly Income increases, the separation by Gender shows an interesting result. Though their confidence intervals contain each other, the mean Life Satisfaction indicated by the linear regression line for Males is higher than Females for all Ages in the data set. For Monthly Income, mean Life Satisfaction is higher for Males below \$10,000, but slightly higher for Females at the high end near \$20,000.
 
 Going forward, explicitly asking a survey question about Life Satisfaction would be helpful if DDSAnalytics wants to know that information.
+
+## Deep Dive
+
+Do the charts/plots again against just the people that have been attrited
+
+```{r eda-attrited-plots1, message=F, warning=F, include=F, results="hide"}
+attrited <- employee_factor[employee_factor$Attrition == "Yes", ]
+
+# Exploratory histograms of continuous variables on attrited 
+attrited %>%
+  keep(is.numeric) %>%
+  gather() %>%
+  ggplot(aes(value), fill=Attrition) +
+    facet_wrap(~ key, scales="free") +
+    geom_histogram() +
+    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=6))
+```
+
+```{r eda-attrited-plots2, message=F, warning=F, include=F, results="hide"}
+# Exploratory bar graphs of factor variables.
+attrited %>%
+  keep(is.factor) %>%
+  gather() %>%
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales="free") +
+    geom_bar() +
+    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=6))
+```
+
+For those that are attrited, focus on the people at company less than 2 years
+
+```{r eda-attrited-lessthan2yearsAtComp, message=F, warning=F, include=F, results="hide"}
+attrited.atCoLessThan2Yrs <- attrited[attrited$YrsAtComp < 3,  ]
+
+# Exploratory histograms of continuous variables on attrited 
+attrited.atCoLessThan2Yrs %>%
+  keep(is.numeric) %>%
+  gather() %>%
+  ggplot(aes(value), fill=Attrition) +
+    facet_wrap(~ key, scales="free") +
+    geom_histogram() +
+    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=6))
+```
+
+```{r eda-attrited-lessthan2yearsAtComp2, message=F, warning=F, include=F, results="hide"}
+# Exploratory bar graphs of factor variables.
+attrited.atCoLessThan2Yrs %>%
+  keep(is.factor) %>%
+  gather() %>%
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales="free") +
+    geom_bar() +
+    theme(axis.text.x=element_text(size=4, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=6))
+```
+
+```{r attrition-drilldown, include=F, results="hide"}
+
+#attrited.atCoLessThan2Yrs
+# ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
+#   geom_bar(aes(fill=WorkLifeBal)) +
+#   coord_flip() +
+#   ylab("Count") +
+#   theme(axis.text.x=element_text(size=8),
+#         axis.text.y=element_text(size=8),
+#         axis.ticks.y = element_blank(),
+#         axis.title.x = element_text(size=10),
+#         axis.title.y = element_blank())
+# 
+# ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
+#   geom_bar(aes(fill=WorkLifeBal), position="fill") +
+#   coord_flip() +
+#   ylab("Percentage") +
+#   theme(axis.text.x=element_text(size=8),
+#         axis.text.y=element_text(size=8),
+#         axis.ticks.y = element_blank(),
+#         axis.title.x = element_text(size=10),
+#         axis.title.y = element_blank())
+# 
+# ggplot(attrited.atCoLessThan2Yrs, aes(x=WorkLifeBal, y=..count..)) +
+#   geom_bar(aes(fill=Overtime)) +
+#   coord_flip() +
+#   ylab("Count") +
+#   scale_fill_manual(values=attcol)
+#   theme(axis.text.x=element_text(size=8),
+#         axis.text.y=element_text(size=8),
+#         axis.ticks.y = element_blank(),
+#         axis.title.x = element_text(size=10),
+#         axis.title.y = element_blank())
+# ggplot(attrited.atCoLessThan2Yrs, aes(x=Overtime, y=..count..)) +
+#   geom_bar(aes(fill=WorkLifeBal), position="fill") +
+#   coord_flip() +
+#   ylab("Count") +
+#   theme(axis.text.x=element_text(size=8),
+#         axis.text.y=element_text(size=8),
+#         axis.ticks.y = element_blank(),
+#         axis.title.x = element_text(size=10),
+#         axis.title.y = element_blank())
+  
+```
 
 # Conclusion
 
