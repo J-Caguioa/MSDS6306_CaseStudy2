@@ -1092,7 +1092,7 @@ Going forward, explicitly asking a survey question about Life Satisfaction would
 
 Do the charts/plots again against just the people that have been attrited
 
-```{r eda-attrited-plots1, message=F, warning=F, include=F, results="hide"}
+```{r eda-attrited-plots1, message=F, warning=F}
 attrited <- employee_factor[employee_factor$Attrition == "Yes", ]
 
 # Exploratory histograms of continuous variables on attrited 
@@ -1106,7 +1106,7 @@ attrited %>%
           axis.text.y=element_text(size=6))
 ```
 
-```{r eda-attrited-plots2, message=F, warning=F, include=F, results="hide"}
+```{r eda-attrited-plots2, message=F, warning=F}
 # Exploratory bar graphs of factor variables.
 attrited %>%
   keep(is.factor) %>%
@@ -1120,7 +1120,7 @@ attrited %>%
 
 For those that are attrited, focus on the people at company less than 2 years
 
-```{r eda-attrited-lessthan2yearsAtComp, message=F, warning=F, include=F, results="hide"}
+```{r eda-attrited-lessthan2yearsAtComp, message=F, warning=F}
 attrited.atCoLessThan2Yrs <- attrited[attrited$YrsAtComp < 3,  ]
 
 # Exploratory histograms of continuous variables on attrited 
@@ -1134,7 +1134,7 @@ attrited.atCoLessThan2Yrs %>%
           axis.text.y=element_text(size=6))
 ```
 
-```{r eda-attrited-lessthan2yearsAtComp2, message=F, warning=F, include=F, results="hide"}
+```{r eda-attrited-lessthan2yearsAtComp2, message=F, warning=F}
 # Exploratory bar graphs of factor variables.
 attrited.atCoLessThan2Yrs %>%
   keep(is.factor) %>%
@@ -1146,53 +1146,79 @@ attrited.atCoLessThan2Yrs %>%
           axis.text.y=element_text(size=6))
 ```
 
-```{r attrition-drilldown, include=F, results="hide"}
+```{r attrition-drilldown}
 
-#attrited.atCoLessThan2Yrs
-# ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
-#   geom_bar(aes(fill=WorkLifeBal)) +
-#   coord_flip() +
-#   ylab("Count") +
-#   theme(axis.text.x=element_text(size=8),
-#         axis.text.y=element_text(size=8),
-#         axis.ticks.y = element_blank(),
-#         axis.title.x = element_text(size=10),
-#         axis.title.y = element_blank())
-# 
-# ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
-#   geom_bar(aes(fill=WorkLifeBal), position="fill") +
-#   coord_flip() +
-#   ylab("Percentage") +
-#   theme(axis.text.x=element_text(size=8),
-#         axis.text.y=element_text(size=8),
-#         axis.ticks.y = element_blank(),
-#         axis.title.x = element_text(size=10),
-#         axis.title.y = element_blank())
-# 
-# ggplot(attrited.atCoLessThan2Yrs, aes(x=WorkLifeBal, y=..count..)) +
-#   geom_bar(aes(fill=Overtime)) +
-#   coord_flip() +
-#   ylab("Count") +
-#   scale_fill_manual(values=attcol)
-#   theme(axis.text.x=element_text(size=8),
-#         axis.text.y=element_text(size=8),
-#         axis.ticks.y = element_blank(),
-#         axis.title.x = element_text(size=10),
-#         axis.title.y = element_blank())
-# ggplot(attrited.atCoLessThan2Yrs, aes(x=Overtime, y=..count..)) +
-#   geom_bar(aes(fill=WorkLifeBal), position="fill") +
-#   coord_flip() +
-#   ylab("Count") +
-#   theme(axis.text.x=element_text(size=8),
-#         axis.text.y=element_text(size=8),
-#         axis.ticks.y = element_blank(),
-#         axis.title.x = element_text(size=10),
-#         axis.title.y = element_blank())
+attrited.atCoLessThan2Yrs
+ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
+  geom_bar(aes(fill=WorkLifeBal)) +
+  coord_flip() +
+  ylab("Count") +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
+
+ggplot(attrited.atCoLessThan2Yrs, aes(x=BusTravel, y=..count..)) +
+  geom_bar(aes(fill=WorkLifeBal), position="fill") +
+  coord_flip() +
+  ylab("Percentage") +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
+
+ggplot(attrited.atCoLessThan2Yrs, aes(x=WorkLifeBal, y=..count..)) +
+  geom_bar(aes(fill=Overtime)) +
+  coord_flip() +
+  ylab("Count") +
+  scale_fill_manual(values=attcol)
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
+ggplot(attrited.atCoLessThan2Yrs, aes(x=Overtime, y=..count..)) +
+  geom_bar(aes(fill=WorkLifeBal), position="fill") +
+  coord_flip() +
+  ylab("Count") +
+  theme(axis.text.x=element_text(size=8),
+        axis.text.y=element_text(size=8),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_text(size=10),
+        axis.title.y = element_blank())
   
 ```
 
 # Conclusion
 
-* Identify three factors contributing to turnover.
-* Identify any existing job-specific trends.
-* Other considerations, such as next steps or other variables needed.
+## Three factors contributing to turnover.
+For our analysis, we found that the following most attributed to the attrition:
+1. Age
+2. Monthly Income
+3. Job Role
+  
+* In addition the following factors were included in the model: Overtime, Distance from Home, and Business Travel
+  
+## Job-specific trends.
+
+Identify any existing job-specific trends
+
+The Job specific trends that surfaced with our analysis include:
+* Sales Representatives, Laboratory Technicians, and Human Resources had the largest attrition percentages
+* Sales Representatives are some of the youngest employees.
+* Sales representative also have the lowest total working years, years in current role, years at current company and years with current manager
+    
+
+## Other considerations
+Other considerations, such as next steps or other variables needed
+
+Our recommendates upon completing this initial analysis are
+1. Provide concrete definition for Life Satisfaction so that it can be included in future analysis
+2. The low pay in young, new talent is causing attrition.  Our recommendation is to increase the starting salary of employees. In the long run this will cost you less as you are not having to train and ramp new talent up and then have them leave the company
+3. Fresh, new talent is the future and lifeblood of your company - introducing them and having them start off in other parts of the company will only reinforce the idea of inclusion and make them feel they are a part of something and we recommend starting young employees off in other parts of the business so they can grow, learn and feel they are apart of the bigger picture
+4. Another component to the analysis we discovered is that overtime was quite high amonth those employees that left.  Our recommendation is to reduce the amount of overtime and offer other incentives for having to work overtime - like extended holiday time, gift cards for family dinner
+5. Our analysis uncovered that many folks that were affected by attrition had a long commute.  We recommend offering incentives of either offering a certain limit on toll tag expense, or optional work from home to accomodate those folks
+6. We noticed that business travel was high among those who attrited and our recommendation here is to look at web conferencing solutions to reduce the amount of travel.  
+7. Lastly we noticed the attrition level was high amonth those that were at a level 0 of Stock Options.  Our recommendation is to invest in your employees by offering higher option level.  One aspect to this that has been successful in the past is to offer stock options to employees with a 4 year vesting period and have yearly refresh grants based on performance.  This will ensure vested interested by employees by seeing a direct correlation in the success of the business will have a positive financial impact for them as well
