@@ -1197,7 +1197,9 @@ ggplot(attrited.atCoLessThan2Yrs, aes(x=Overtime, y=..count..)) +
 # Conclusion
 
 ## Three factors contributing to turnover.
-For our analysis, we found that the following most attributed to the attrition:
+
+For our analysis, we found that the following most attributed to the attrition: 
+
 1. Age
 2. Monthly Income
 3. Job Role
@@ -1206,18 +1208,17 @@ For our analysis, we found that the following most attributed to the attrition:
   
 ## Job-specific trends.
 
-Identify any existing job-specific trends
-
 The Job specific trends that surfaced with our analysis include:
-* Sales Representatives, Laboratory Technicians, and Human Resources had the largest attrition percentages
-* Sales Representatives are some of the youngest employees.
-* Sales representative also have the lowest total working years, years in current role, years at current company and years with current manager
+
+1. Sales Representatives, Laboratory Technicians, and Human Resources had the largest attrition percentages
+2. Sales Representatives are some of the youngest employees.
+3. Sales representative also have the lowest total working years, years in current role, years at current company and years with current manager
     
 
 ## Other considerations
-Other considerations, such as next steps or other variables needed
 
-Our recommendates upon completing this initial analysis are
+Our recommendates for next steps and other variables needed are as follows:
+
 1. Provide concrete definition for Life Satisfaction so that it can be included in future analysis
 2. The low pay in young, new talent is causing attrition.  Our recommendation is to increase the starting salary of employees. In the long run this will cost you less as you are not having to train and ramp new talent up and then have them leave the company
 3. Fresh, new talent is the future and lifeblood of your company - introducing them and having them start off in other parts of the company will only reinforce the idea of inclusion and make them feel they are a part of something and we recommend starting young employees off in other parts of the business so they can grow, learn and feel they are apart of the bigger picture
