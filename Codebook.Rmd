@@ -1,7 +1,0 @@
----
-title: "Codebook"
-author: "Lavonnia Newman, Jeff Washburn, & Joseph Caguioa"
-date: "2/25/2019"
-output: html_document
----
-
