@@ -1,0 +1,1627 @@
+---
+title: "CodeBook for MSDS6306 - Case Study 2"
+author: "Lavonnia Newman, Jeff Washburn, & Joseph Caguioa"
+date: "2/25/2019"
+output: 
+  html_document:
+documentclass: article
+header-includes:
+  - \newcommand{\fullline}{\noindent\makebox[\linewidth]{\rule{\textwidth}{0.4pt}}}
+  - \renewcommand\familydefault{\sfdefault}
+  - \newcommand{\bminione}{\begin{minipage}{0.75 \textwidth}}
+  - \newcommand{\bminitwo}{\begin{minipage}{0.25 \textwidth}}
+  - \newcommand{\emini}{\end{minipage}}
+---
+```{r , echo=FALSE, include=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+library("ggplot2")
+library("pander")
+```
+```{r 'visualFunctions', echo=FALSE, include=FALSE, warning=FALSE, message=FALSE, error=FALSE}
+ggAggHist <- getFromNamespace("ggAggHist", "dataMaid")
+ggAggBarplot <- getFromNamespace("ggAggBarplot", "dataMaid")
+```
+# Data report overview
+The dataset examined has the following dimensions:
+
+
+---------------------------------
+Feature                    Result
+------------------------ --------
+Number of observations       1470
+
+Number of variables            35
+---------------------------------
+
+
+
+
+# **Codebook Summary Table**
+
+## employee 
+
+-------------------------------------------------------------------------------------   
+Original Unedited            Variable             Class         # unique    Missing     
+ Names                                           values                        
+--------------------      --------------------  --------------  ----------- --------- 
+Age                        **[Age]**             numeric             43       0.00 %                
+
+Attrition                  **[Attrition]**      character            2        0.00 %                
+    
+BusinessTravel             **[BusTravel]**      character            3        0.00 %                
+
+DailyRate                  **[DailyRate]**      numeric            886        0.00 %                
+
+Department                 **[Department]**     character            3        0.00 %                
+
+DistranceFromHOme          **[DistFromHme]**    numeric             29        0.00 %                
+
+Education                  **[Education]**      numeric              5        0.00 %                
+
+EducationField             **[EduField]**       character            6        0.00 %                
+
+EmployeeCount              **[EmpCount]**       numeric              1        0.00 %                
+
+EmployeeNumber             **[EmpId]**          numeric           1470        0.00 %                
+
+EnvironmentSatisfaction    **[EnvironSat]**     numeric              4        0.00 %                
+
+Gender                     **[Gender]**         character            2        0.00 %                
+
+HourlyRate                 **[HourlyRate]**     numeric             71        0.00 %                
+
+JobInvolvement             **[JobInvolvemt]**   numeric              4        0.00 %                
+
+JobLevel                   **[JobLevel]**       numeric              5        0.00 %                
+
+JobRole                    **[JobRole]**        character            9        0.00 %                
+
+JObSatisfaction            **[JobSat]**         numeric              4        0.00 %                
+
+MaritalStatus              **[MaritalStat]**    character            3        0.00 %                
+
+MonnthlyIncome             **[MnthInc]**        numeric           1349        0.00 %                
+
+MonthlyRate                **[MnthRate]**       numeric           1427        0.00 %                
+
+NumCompaniesWorked         **[NumCoWorked]**    numeric             10        0.00 %                
+
+Over18                     **[Over18]**         character            1        0.00 %                
+
+Overtime                   **[Overtime]**       character            2        0.00 %                
+
+PercentSalaryHike          **[PcntSalInc]**     numeric             15        0.00 %                
+
+PerformanceRating          **[PerfRating]**     numeric              2        0.00 %                
+
+RelationshipSatisfaction   **[RelationSat]**    numeric              4        0.00 %                
+
+StandardHours              **[StandHours]**     numeric              1        0.00 %                
+
+StockOptionLevel           **[StckOptLev]**     numeric              4        0.00 %                
+
+TotalWorkingYears          **[TotalWrkYrs]**    numeric             40        0.00 %                
+
+TrainingTimesLastYear      **[TrainPrevYr]**    numeric              7        0.00 %                
+
+WorkLifeBalance            **[WorkLifeBal]**    numeric              4        0.00 %                
+
+YearsAtCompany             **[YrsAtComp]**      numeric             37        0.00 %                
+
+YearsInCurrentRole         **[YrsCurrRole]**    numeric             19        0.00 %                
+
+YearsSinceLastPromotion    **[YrsSncPromo]**    numeric             16        0.00 %                
+
+YearsWithCurrManager       **[YrsWtCurMgr]**    numeric             18        0.00 %                
+-------------------------------------------------------------------------------------
+
+
+
+
+## **Variable list**
+### Age
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values          43
+
+Median                           36
+
+1st and 3rd quartiles        30; 43
+
+Min. and max.                18; 60
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-1-Age', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(15L, 20L, 25L, 30L, 
+35L, 40L, 45L, 50L, 55L), xmax = c(20L, 25L, 30L, 35L, 40L, 45L, 
+50L, 55L, 60L), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(28L, 
+95L, 263L, 343L, 276L, 192L, 130L, 96L, 47L)), class = "data.frame", row.names = c(NA, 
+-9L)), vnam = "Age")
+```
+\emini
+
+
+
+
+\fullline
+
+### Attrition
+
+\bminione
+
+-------------------------------------
+Feature                        Result
+------------------------- -----------
+Variable type               character
+
+Number of missing obs.        0 (0 %)
+
+Number of unique values             2
+
+Mode                             "No"
+-------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-2-Attrition', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggBarplot(data = structure(list(x = structure(1:2, .Label = c("No", 
+"Yes"), class = "factor"), y = c(1233L, 237L)), class = "data.frame", row.names = c(NA, 
+-2L)), vnam = "Attrition")
+```
+\emini
+
+
+- Observed factor levels: \"No\", \"Yes\". 
+
+
+
+\fullline
+
+### BusTravel
+
+\bminione
+
+-------------------------------------------
+Feature                              Result
+------------------------- -----------------
+Variable type                     character
+
+Number of missing obs.              0 (0 %)
+
+Number of unique values                   3
+
+Mode                        "Travel_Rarely"
+-------------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-3-BusTravel', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggBarplot(data = structure(list(x = structure(1:3, .Label = c("Non-Travel", 
+"Travel_Frequently", "Travel_Rarely"), class = "factor"), y = c(150L, 
+277L, 1043L)), class = "data.frame", row.names = c(NA, -3L)), 
+    vnam = "BusTravel")
+```
+\emini
+
+
+- Observed factor levels: \"Non-Travel\", \"Travel_Frequently\", \"Travel_Rarely\". 
+
+
+
+\fullline
+
+### DailyRate
+
+\bminione
+
+-------------------------------------
+Feature                        Result
+------------------------- -----------
+Variable type                 numeric
+
+Number of missing obs.        0 (0 %)
+
+Number of unique values           886
+
+Median                            802
+
+1st and 3rd quartiles       465; 1157
+
+Min. and max.               102; 1499
+-------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-4-DailyRate', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(100L, 200L, 300L, 400L, 
+500L, 600L, 700L, 800L, 900L, 1000L, 1100L, 1200L, 1300L, 1400L
+), xmax = c(200L, 300L, 400L, 500L, 600L, 700L, 800L, 900L, 1000L, 
+1100L, 1200L, 1300L, 1400L, 1500L), ymin = c(0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0), ymax = c(106L, 91L, 103L, 105L, 123L, 
+119L, 86L, 107L, 107L, 90L, 111L, 105L, 123L, 94L)), class = "data.frame", row.names = c(NA, 
+-14L)), vnam = "DailyRate")
+```
+\emini
+
+
+
+
+\fullline
+
+### Department
+
+\bminione
+
+----------------------------------------------------
+Feature                                       Result
+------------------------- --------------------------
+Variable type                              character
+
+Number of missing obs.                       0 (0 %)
+
+Number of unique values                            3
+
+Mode                        "Research & Development"
+----------------------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-5-Department', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggBarplot(data = structure(list(x = structure(1:3, .Label = c("Human Resources", 
+"Research & Development", "Sales"), class = "factor"), y = c(63L, 
+961L, 446L)), class = "data.frame", row.names = c(NA, -3L)), 
+    vnam = "Department")
+```
+\emini
+
+
+- Observed factor levels: \"Human Resources\", \"Research & Development\", \"Sales\". 
+
+
+
+\fullline
+
+### DistFromHme
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values          29
+
+Median                            7
+
+1st and 3rd quartiles         2; 14
+
+Min. and max.                 1; 29
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-6-DistFromHme', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 2, 4, 6, 8, 10, 12, 
+14, 16, 18, 20, 22, 24, 26, 28), xmax = c(2, 4, 6, 8, 10, 12, 
+14, 16, 18, 20, 22, 24, 26, 28, 30), ymin = c(0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(419L, 148L, 124L, 164L, 
+171L, 49L, 40L, 58L, 46L, 47L, 37L, 55L, 50L, 35L, 27L)), class = "data.frame", row.names = c(NA, 
+-15L)), vnam = "DistFromHme")
+```
+\emini
+
+
+
+
+\fullline
+
+### Education
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           5
+
+Median                            3
+
+1st and 3rd quartiles          2; 4
+
+Min. and max.                  1; 5
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-7-Education', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(1, 1.5, 2, 2.5, 3, 3.5, 
+4, 4.5), xmax = c(1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5), ymin = c(0, 
+0, 0, 0, 0, 0, 0, 0), ymax = c(170L, 282L, 0L, 572L, 0L, 398L, 
+0L, 48L)), class = "data.frame", row.names = c(NA, -8L)), vnam = "Education")
+```
+\emini
+
+
+
+
+\fullline
+
+### EduField
+
+\bminione
+
+-------------------------------------------
+Feature                              Result
+------------------------- -----------------
+Variable type                     character
+
+Number of missing obs.              0 (0 %)
+
+Number of unique values                   6
+
+Mode                        "Life Sciences"
+-------------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-8-EduField', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggBarplot(data = structure(list(x = structure(1:6, .Label = c("Human Resources", 
+"Life Sciences", "Marketing", "Medical", "Other", "Technical Degree"
+), class = "factor"), y = c(27L, 606L, 159L, 464L, 82L, 132L)), class = "data.frame", row.names = c(NA, 
+-6L)), vnam = "EduField")
+```
+\emini
+
+
+- Observed factor levels: \"Human Resources\", \"Life Sciences\", \"Marketing\", \"Medical\", \"Other\", \"Technical Degree\". 
+
+
+
+\fullline
+
+### EmpCount
+
+* The variable only takes one (non-missing) value: \"1\". The variable contains 0 \% missing observations.
+
+
+
+\fullline
+
+### EmpId
+
+\bminione
+
+-------------------------------------------
+Feature                              Result
+------------------------- -----------------
+Variable type                       numeric
+
+Number of missing obs.              0 (0 %)
+
+Number of unique values                1470
+
+Median                               1020.5
+
+1st and 3rd quartiles       491.25; 1555.75
+
+Min. and max.                       1; 2068
+-------------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-10-EmpId', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 200, 400, 600, 800, 
+1000, 1200, 1400, 1600, 1800, 2000), xmax = c(200, 400, 600, 
+800, 1000, 1200, 1400, 1600, 1800, 2000, 2200), ymin = c(0, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(149L, 144L, 155L, 129L, 
+140L, 141L, 136L, 140L, 151L, 137L, 48L)), class = "data.frame", row.names = c(NA, 
+-11L)), vnam = "EmpId")
+```
+\emini
+
+
+
+
+\fullline
+
+### EnvironSat
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           4
+
+Median                            3
+
+1st and 3rd quartiles          2; 4
+
+Min. and max.                  1; 4
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-11-EnvironSat', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(1, 1.2, 1.4, 1.6, 1.8, 
+2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8), xmax = c(1.2, 
+1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 
+4), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(284L, 
+0L, 0L, 0L, 287L, 0L, 0L, 0L, 0L, 453L, 0L, 0L, 0L, 0L, 446L)), class = "data.frame", row.names = c(NA, 
+-15L)), vnam = "EnvironSat")
+```
+\emini
+
+
+
+
+\fullline
+
+### Gender
+
+\bminione
+
+-------------------------------------
+Feature                        Result
+------------------------- -----------
+Variable type               character
+
+Number of missing obs.        0 (0 %)
+
+Number of unique values             2
+
+Mode                           "Male"
+-------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-12-Gender', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggBarplot(data = structure(list(x = structure(1:2, .Label = c("Female", 
+"Male"), class = "factor"), y = c(588L, 882L)), class = "data.frame", row.names = c(NA, 
+-2L)), vnam = "Gender")
+```
+\emini
+
+
+- Observed factor levels: \"Female\", \"Male\". 
+
+
+
+\fullline
+
+### HourlyRate
+
+\bminione
+
+-------------------------------------
+Feature                        Result
+------------------------- -----------
+Variable type                 numeric
+
+Number of missing obs.        0 (0 %)
+
+Number of unique values            71
+
+Median                             66
+
+1st and 3rd quartiles       48; 83.75
+
+Min. and max.                 30; 100
+-------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-13-HourlyRate', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(30L, 35L, 40L, 45L, 
+50L, 55L, 60L, 65L, 70L, 75L, 80L, 85L, 90L, 95L), xmax = c(35L, 
+40L, 45L, 50L, 55L, 60L, 65L, 70L, 75L, 80L, 85L, 90L, 95L, 100L
+), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(107L, 
+84L, 115L, 103L, 104L, 114L, 97L, 93L, 107L, 111L, 113L, 103L, 
+104L, 115L)), class = "data.frame", row.names = c(NA, -14L)), 
+    vnam = "HourlyRate")
+```
+\emini
+
+
+
+
+\fullline
+
+### JobInvolvemt
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           4
+
+Median                            3
+
+1st and 3rd quartiles          2; 3
+
+Min. and max.                  1; 4
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-14-JobInvolvemt', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(1, 1.2, 1.4, 1.6, 1.8, 
+2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8), xmax = c(1.2, 
+1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 
+4), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(83L, 
+0L, 0L, 0L, 375L, 0L, 0L, 0L, 0L, 868L, 0L, 0L, 0L, 0L, 144L)), class = "data.frame", row.names = c(NA, 
+-15L)), vnam = "JobInvolvemt")
+```
+\emini
+
+
+
+
+\fullline
+
+### JobLevel
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           5
+
+Median                            2
+
+1st and 3rd quartiles          1; 3
+
+Min. and max.                  1; 5
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-15-JobLevel', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(1, 1.5, 2, 2.5, 3, 3.5, 
+4, 4.5), xmax = c(1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5), ymin = c(0, 
+0, 0, 0, 0, 0, 0, 0), ymax = c(543L, 534L, 0L, 218L, 0L, 106L, 
+0L, 69L)), class = "data.frame", row.names = c(NA, -8L)), vnam = "JobLevel")
+```
+\emini
+
+
+
+
+\fullline
+
+### JobRole
+
+\bminione
+
+---------------------------------------------
+Feature                                Result
+------------------------- -------------------
+Variable type                       character
+
+Number of missing obs.                0 (0 %)
+
+Number of unique values                     9
+
+Mode                        "Sales Executive"
+---------------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-16-JobRole', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggBarplot(data = structure(list(x = structure(1:9, .Label = c("Healthcare Representative", 
+"Human Resources", "Laboratory Technician", "Manager", "Manufacturing Director", 
+"Research Director", "Research Scientist", "Sales Executive", 
+"Sales Representative"), class = "factor"), y = c(131L, 52L, 
+259L, 102L, 145L, 80L, 292L, 326L, 83L)), class = "data.frame", row.names = c(NA, 
+-9L)), vnam = "JobRole")
+```
+\emini
+
+
+- Observed factor levels: \"Healthcare Representative\", \"Human Resources\", \"Laboratory Technician\", \"Manager\", \"Manufacturing Director\", \"Research Director\", \"Research Scientist\", \"Sales Executive\", \"Sales Representative\". 
+
+
+
+\fullline
+
+### JobSat
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           4
+
+Median                            3
+
+1st and 3rd quartiles          2; 4
+
+Min. and max.                  1; 4
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-17-JobSat', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(1, 1.2, 1.4, 1.6, 1.8, 
+2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8), xmax = c(1.2, 
+1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 
+4), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(289L, 
+0L, 0L, 0L, 280L, 0L, 0L, 0L, 0L, 442L, 0L, 0L, 0L, 0L, 459L)), class = "data.frame", row.names = c(NA, 
+-15L)), vnam = "JobSat")
+```
+\emini
+
+
+
+
+\fullline
+
+### MaritalStat
+
+\bminione
+
+-------------------------------------
+Feature                        Result
+------------------------- -----------
+Variable type               character
+
+Number of missing obs.        0 (0 %)
+
+Number of unique values             3
+
+Mode                        "Married"
+-------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-18-MaritalStat', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggBarplot(data = structure(list(x = structure(1:3, .Label = c("Divorced", 
+"Married", "Single"), class = "factor"), y = c(327L, 673L, 470L
+)), class = "data.frame", row.names = c(NA, -3L)), vnam = "MaritalStat")
+```
+\emini
+
+
+- Observed factor levels: \"Divorced\", \"Married\", \"Single\". 
+
+
+
+\fullline
+
+### MnthInc
+
+\bminione
+
+---------------------------------------
+Feature                          Result
+------------------------- -------------
+Variable type                   numeric
+
+Number of missing obs.          0 (0 %)
+
+Number of unique values            1349
+
+Median                             4919
+
+1st and 3rd quartiles        2911; 8379
+
+Min. and max.               1009; 19999
+---------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-19-MnthInc', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 2000, 4000, 6000, 
+8000, 10000, 12000, 14000, 16000, 18000), xmax = c(2000, 4000, 
+6000, 8000, 10000, 12000, 14000, 16000, 18000, 20000), ymin = c(0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(33L, 510L, 371L, 175L, 100L, 
+86L, 53L, 16L, 57L, 69L)), class = "data.frame", row.names = c(NA, 
+-10L)), vnam = "MnthInc")
+```
+\emini
+
+
+
+
+\fullline
+
+### MnthRate
+
+\bminione
+
+-----------------------------------------
+Feature                            Result
+------------------------- ---------------
+Variable type                     numeric
+
+Number of missing obs.            0 (0 %)
+
+Number of unique values              1427
+
+Median                            14235.5
+
+1st and 3rd quartiles       8047; 20461.5
+
+Min. and max.                 2094; 26999
+-----------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-20-MnthRate', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(2000L, 4000L, 6000L, 
+8000L, 10000L, 12000L, 14000L, 16000L, 18000L, 20000L, 22000L, 
+24000L, 26000L), xmax = c(4000L, 6000L, 8000L, 10000L, 12000L, 
+14000L, 16000L, 18000L, 20000L, 22000L, 24000L, 26000L, 28000L
+), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(110L, 
+130L, 123L, 124L, 118L, 116L, 114L, 120L, 117L, 119L, 131L, 99L, 
+49L)), class = "data.frame", row.names = c(NA, -13L)), vnam = "MnthRate")
+```
+\emini
+
+
+
+
+\fullline
+
+### NumCoWorked
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values          10
+
+Median                            2
+
+1st and 3rd quartiles          1; 4
+
+Min. and max.                  0; 9
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-21-NumCoWorked', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 1, 2, 3, 4, 5, 6, 
+7, 8), xmax = c(1, 2, 3, 4, 5, 6, 7, 8, 9), ymin = c(0, 0, 0, 
+0, 0, 0, 0, 0, 0), ymax = c(718L, 146L, 159L, 139L, 63L, 70L, 
+74L, 49L, 52L)), class = "data.frame", row.names = c(NA, -9L)), 
+    vnam = "NumCoWorked")
+```
+\emini
+
+
+
+
+\fullline
+
+### Over18
+
+* The variable only takes one (non-missing) value: \"Y\". The variable contains 0 \% missing observations.
+
+
+
+\fullline
+
+### Overtime
+
+\bminione
+
+-------------------------------------
+Feature                        Result
+------------------------- -----------
+Variable type               character
+
+Number of missing obs.        0 (0 %)
+
+Number of unique values             2
+
+Mode                             "No"
+-------------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-23-Overtime', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggBarplot(data = structure(list(x = structure(1:2, .Label = c("No", 
+"Yes"), class = "factor"), y = c(1054L, 416L)), class = "data.frame", row.names = c(NA, 
+-2L)), vnam = "Overtime")
+```
+\emini
+
+
+- Observed factor levels: \"No\", \"Yes\". 
+
+
+
+\fullline
+
+### PcntSalInc
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values          15
+
+Median                           14
+
+1st and 3rd quartiles        12; 18
+
+Min. and max.                11; 25
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-24-PcntSalInc', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = 11:24, xmax = 12:25, ymin = c(0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(408L, 209L, 
+201L, 101L, 78L, 82L, 89L, 76L, 55L, 48L, 56L, 28L, 21L, 18L)), class = "data.frame", row.names = c(NA, 
+-14L)), vnam = "PcntSalInc")
+```
+\emini
+
+
+
+
+\fullline
+
+### PerfRating
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           2
+
+Median                            3
+
+1st and 3rd quartiles          3; 3
+
+Min. and max.                  3; 4
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-25-PerfRating', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(3, 3.1, 3.2, 3.3, 3.4, 
+3.5, 3.6, 3.7, 3.8, 3.9), xmax = c(3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 
+3.7, 3.8, 3.9, 4), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(1244L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 226L)), class = "data.frame", row.names = c(NA, 
+-10L)), vnam = "PerfRating")
+```
+\emini
+
+
+
+
+\fullline
+
+### RelationSat
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           4
+
+Median                            3
+
+1st and 3rd quartiles          2; 4
+
+Min. and max.                  1; 4
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-26-RelationSat', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(1, 1.2, 1.4, 1.6, 1.8, 
+2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8), xmax = c(1.2, 
+1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 
+4), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(276L, 
+0L, 0L, 0L, 303L, 0L, 0L, 0L, 0L, 459L, 0L, 0L, 0L, 0L, 432L)), class = "data.frame", row.names = c(NA, 
+-15L)), vnam = "RelationSat")
+```
+\emini
+
+
+
+
+\fullline
+
+### StandHours
+
+* The variable only takes one (non-missing) value: \"80\". The variable contains 0 \% missing observations.
+
+
+
+\fullline
+
+### StckOptLev
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           4
+
+Median                            1
+
+1st and 3rd quartiles          0; 1
+
+Min. and max.                  0; 3
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-28-StckOptLev', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 0.2, 0.4, 0.6, 0.8, 
+1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8), xmax = c(0.2, 
+0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 
+3), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(631L, 
+0L, 0L, 0L, 596L, 0L, 0L, 0L, 0L, 158L, 0L, 0L, 0L, 0L, 85L)), class = "data.frame", row.names = c(NA, 
+-15L)), vnam = "StckOptLev")
+```
+\emini
+
+
+
+
+\fullline
+
+### TotalWrkYrs
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values          40
+
+Median                           10
+
+1st and 3rd quartiles         6; 15
+
+Min. and max.                 0; 40
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-29-TotalWrkYrs', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 5, 10, 15, 20, 25, 
+30, 35), xmax = c(5, 10, 15, 20, 25, 30, 35, 40), ymin = c(0, 
+0, 0, 0, 0, 0, 0, 0), ymax = c(316L, 607L, 191L, 149L, 109L, 
+52L, 33L, 13L)), class = "data.frame", row.names = c(NA, -8L)), 
+    vnam = "TotalWrkYrs")
+```
+\emini
+
+
+
+
+\fullline
+
+### TrainPrevYr
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           7
+
+Median                            3
+
+1st and 3rd quartiles          2; 3
+
+Min. and max.                  0; 6
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-30-TrainPrevYr', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 0.5, 1, 1.5, 2, 2.5, 
+3, 3.5, 4, 4.5, 5, 5.5), xmax = c(0.5, 1, 1.5, 2, 2.5, 3, 3.5, 
+4, 4.5, 5, 5.5, 6), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0), ymax = c(54L, 71L, 0L, 547L, 0L, 491L, 0L, 123L, 0L, 119L, 
+0L, 65L)), class = "data.frame", row.names = c(NA, -12L)), vnam = "TrainPrevYr")
+```
+\emini
+
+
+
+
+\fullline
+
+### WorkLifeBal
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values           4
+
+Median                            3
+
+1st and 3rd quartiles          2; 3
+
+Min. and max.                  1; 4
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-31-WorkLifeBal', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(1, 1.2, 1.4, 1.6, 1.8, 
+2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8), xmax = c(1.2, 
+1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 
+4), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), ymax = c(80L, 
+0L, 0L, 0L, 344L, 0L, 0L, 0L, 0L, 893L, 0L, 0L, 0L, 0L, 153L)), class = "data.frame", row.names = c(NA, 
+-15L)), vnam = "WorkLifeBal")
+```
+\emini
+
+
+
+
+\fullline
+
+### YrsAtComp
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values          37
+
+Median                            5
+
+1st and 3rd quartiles          3; 9
+
+Min. and max.                 0; 40
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-32-YrsAtComp', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 5, 10, 15, 20, 25, 
+30, 35), xmax = c(5, 10, 15, 20, 25, 30, 35, 40), ymin = c(0, 
+0, 0, 0, 0, 0, 0, 0), ymax = c(776L, 448L, 108L, 72L, 41L, 9L, 
+12L, 4L)), class = "data.frame", row.names = c(NA, -8L)), vnam = "YrsAtComp")
+```
+\emini
+
+
+
+
+\fullline
+
+### YrsCurrRole
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values          19
+
+Median                            3
+
+1st and 3rd quartiles          2; 7
+
+Min. and max.                 0; 18
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-33-YrsCurrRole', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 2, 4, 6, 8, 10, 12, 
+14, 16), xmax = c(2, 4, 6, 8, 10, 12, 14, 16, 18), ymin = c(0, 
+0, 0, 0, 0, 0, 0, 0, 0), ymax = c(673L, 239L, 73L, 311L, 96L, 
+32L, 25L, 15L, 6L)), class = "data.frame", row.names = c(NA, 
+-9L)), vnam = "YrsCurrRole")
+```
+\emini
+
+
+
+
+\fullline
+
+### YrsSncPromo
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values          16
+
+Median                            1
+
+1st and 3rd quartiles          0; 3
+
+Min. and max.                 0; 15
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-34-YrsSncPromo', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 1, 2, 3, 4, 5, 6, 
+7, 8, 9, 10, 11, 12, 13, 14), xmax = c(1, 2, 3, 4, 5, 6, 7, 8, 
+9, 10, 11, 12, 13, 14, 15), ymin = c(0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0, 0, 0), ymax = c(938L, 159L, 52L, 61L, 45L, 32L, 
+76L, 18L, 17L, 6L, 24L, 10L, 10L, 9L, 13L)), class = "data.frame", row.names = c(NA, 
+-15L)), vnam = "YrsSncPromo")
+```
+\emini
+
+
+
+
+\fullline
+
+### YrsWtCurMgr
+
+\bminione
+
+-----------------------------------
+Feature                      Result
+------------------------- ---------
+Variable type               numeric
+
+Number of missing obs.      0 (0 %)
+
+Number of unique values          18
+
+Median                            3
+
+1st and 3rd quartiles          2; 7
+
+Min. and max.                 0; 17
+-----------------------------------
+
+
+\emini
+\bminitwo
+```{r 'Var-35-YrsWtCurMgr', echo=FALSE, fig.width=4, fig.height=3, message=FALSE, warning=FALSE}
+ggAggHist(data = structure(list(xmin = c(0, 2, 4, 6, 8, 10, 12, 
+14, 16), xmax = c(2, 4, 6, 8, 10, 12, 14, 16, 18), ymin = c(0, 
+0, 0, 0, 0, 0, 0, 0, 0), ymax = c(683L, 240L, 60L, 323L, 91L, 
+40L, 19L, 7L, 7L)), class = "data.frame", row.names = c(NA, -9L
+)), vnam = "YrsWtCurMgr")
+```
+\emini
+
+
+
+
+\fullline
+
+# **Analysis Objects**
+Two versions of the original employee data frame are created. One converts all character variables and select rating-type numeric variables to factors. The other goes a step further and coerces all variables to numeric. Both are used in different ways during the analysis.
+
+### employee_factor
+
+---------------------------------------------------
+Variable             Class       # unique  Missing  
+                                           values                        
+-------------------- --------- ---------- --------- 
+**[Age]**            numeric           43  0.00 %                
+
+**[Attrition]**      factor             2  0.00 %                
+
+**[BusTravel]**      factor             3  0.00 %                
+
+**[DailyRate]**      numeric          886  0.00 %                
+
+**[Department]**     factor             3  0.00 %                
+
+**[DistFromHme]**    numeric           29  0.00 %                
+
+**[Education]**      factor             5  0.00 %                
+
+**[EduField]**       factor             6  0.00 %                
+
+**[EmpCount]**       numeric            1  0.00 %                
+
+**[EmpId]**          numeric         1470  0.00 %                
+
+**[EnvironSat]**     factor             4  0.00 %                
+
+**[Gender]**         factor             2  0.00 %                
+
+**[HourlyRate]**     numeric           71  0.00 %                
+
+**[JobInvolvemt]**   factor             4  0.00 %                
+
+**[JobLevel]**       factor             5  0.00 %                
+
+**[JobRole]**        factor             9  0.00 %                
+
+**[JobSat]**         factor             4  0.00 %                
+
+**[MaritalStat]**    factor             3  0.00 %                
+
+**[MnthInc]**        numeric         1349  0.00 %                
+
+**[MnthRate]**       numeric         1427  0.00 %                
+
+**[NumCoWorked]**    numeric           10  0.00 %                
+
+**[Over18]**         factor             1  0.00 %                
+
+**[Overtime]**       factor             2  0.00 %                
+
+**[PcntSalInc]**     numeric           15  0.00 %                
+
+**[PerfRating]**     factor             2  0.00 %                
+
+**[RelationSat]**    factor             4  0.00 %                
+
+**[StandHours]**     factor             1  0.00 %                
+
+**[StckOptLev]**     factor             4  0.00 %                
+
+**[TotalWrkYrs]**    numeric           40  0.00 %                
+
+**[TrainPrevYr]**    numeric            7  0.00 %                
+
+**[WorkLifeBal]**    factor             4  0.00 %                
+
+**[YrsAtComp]**      numeric           37  0.00 %                
+
+**[YrsCurrRole]**    numeric           19  0.00 %                
+
+**[YrsSncPromo]**    numeric           16  0.00 %                
+
+**[YrsWtCurMgr]**    numeric           18  0.00 %                
+-------------------------------------------------------------------------
+
+
+### employee_numeric
+
+
+---------------------------------------------------
+Variable             Class       # unique  Missing  
+                                           values                        
+-------------------- --------- ---------- --------- 
+**[Age]**            numeric           43  0.00 %                
+
+**[Attrition]**      numeric             2  0.00 %                
+
+**[BusTravel]**      numeric             3  0.00 %                
+
+**[DailyRate]**      numeric          886  0.00 %                
+
+**[Department]**     numeric             3  0.00 %                
+
+**[DistFromHme]**    numeric           29  0.00 %                
+
+**[Education]**      numeric             5  0.00 %                
+
+**[EduField]**       numeric             6  0.00 %                
+
+**[EmpCount]**       numeric            1  0.00 %                
+
+**[EmpId]**          numeric         1470  0.00 %                
+
+**[EnvironSat]**     numeric             4  0.00 %                
+
+**[Gender]**         numeric             2  0.00 %                
+
+**[HourlyRate]**     numeric           71  0.00 %                
+
+**[JobInvolvemt]**   numeric             4  0.00 %                
+
+**[JobLevel]**       numeric             5  0.00 %                
+
+**[JobRole]**        numeric             9  0.00 %                
+
+**[JobSat]**         numeric             4  0.00 %                
+
+**[MaritalStat]**    numeric             3  0.00 %                
+
+**[MnthInc]**        numeric         1349  0.00 %                
+
+**[MnthRate]**       numeric         1427  0.00 %                
+
+**[NumCoWorked]**    numeric           10  0.00 %                
+
+**[Over18]**         numeric             1  0.00 %                
+
+**[Overtime]**       numeric             2  0.00 %                
+
+**[PcntSalInc]**     numeric           15  0.00 %                
+
+**[PerfRating]**     numeric             2  0.00 %                
+
+**[RelationSat]**    numeric             4  0.00 %                
+
+**[StandHours]**     numeric             1  0.00 %                
+
+**[StckOptLev]**     numeric             4  0.00 %                
+
+**[TotalWrkYrs]**    numeric           40  0.00 %                
+
+**[TrainPrevYr]**    numeric            7  0.00 %                
+
+**[WorkLifeBal]**    numeric             4  0.00 %                
+
+**[YrsAtComp]**      numeric           37  0.00 %                
+
+**[YrsCurrRole]**    numeric           19  0.00 %                
+
+**[YrsSncPromo]**    numeric           16  0.00 %                
+
+**[YrsWtCurMgr]**    numeric           18  0.00 %                
+-------------------------------------------------------------------------
+
+# Non-Visualization Variables
+
+ 
+
+\fullline
+
+-----------------------------------------------------------------------------------
+Feature                      Result
+-------------------------- --------------------------------------------------------
+**descriptiveStats1**       Age, MnthInc, PcntSalInc, YrsAtComp  
+
+**descriptiveStats2**       YrsCurrRole, YrsSncPromo, YrsWtCurMgr
+
+**EducationData**           Below College, College, Bachelor, Master, Doctor
+
+**GenderData**              Male, Female 
+
+**JobRoleData**             Healthcare Representative, Human Resources, Laboratory Technician, Manager                                        Manufacturing Director, Research Director, Research Scientist, 
+                            Sales Executive, Sales Representative
+
+**ManagerRoleData**         Manager, Manufacturing Director, Research Director
+
+**lm1**                     linear model for MnthInc and Age
+
+**lm2**                     linear model for log of MnthInc and Age
+
+**employee_log**            copy of employee_factor with log of the MnthInc variable
+
+**train_rows**              data partition of employee_factor
+
+**train_subset**            Subset of employee data for training model
+
+**test_subset**             Subset of employee data for test model 
+
+**null_model**              Model with no predictors
+
+**full_model**              Mode with full predictors
+
+**glmStep_model**           Stepwise regression model 
+
+
+
+
+
+
+-----------------------------------------------------------------------------------
+
+
+# Visualization Variables
+
+ 
+
+\fullline
+
+-----------------------------------------------------------------------------------
+Feature                      Result
+-------------------------- --------------------------------------------------------
+**ggAge**             Histogram of Age
+
+**ggIncome**          Histogram of Income 
+
+**ggpairs**           Visualize the relationship between rates and income 
+                      HourlyRate, DailyRate, MnthRate, MnthInc 
+
+**employee_money**    upper and lower limits for the rates HourlyRate, DailyRate, MnthRate, MnthInc
+
+
+
+**JobRoleData**             Healthcare Representative, Human Resources, Laboratory Technician, Manager                                        Manufacturing Director, Research Director, Research Scientist, 
+                            Sales Executive, Sales Representative
+
+**satisfaction**            "JobSat", "WorkLifeBal", "RelationSat"
+**ManagerRoleData**         Manager, Manufacturing Director, Research Director
+
+**jobrole_age_a**           Throwaway graph to obtain common job role
+
+**jobrole_monthincome**     Job role and monthly income boxplots
+
+**jobrole_salaryincrease**  Job role and percent salary increase
+
+**jobrole_distancehome**    Job role and distance from home boxplots
+
+**jobrole_age**             Job role and Age boxplots
+
+**jobrole_totalworkyears**  Job role and working years boxplots
+
+**jobrole_currentyears**    Job role and years in current role boxplot
+
+**jobrole_yearsatcomp**     Job role and years at company boxplot
+
+**jobrole_currentmamnager** Job role and years with current manager boxplot
+
+**jobrole_numcompanies**    Job role and numb of companies worked boxplot
+
+**jobrole_totalworkyears**  Job role and total work years boxplot
+
+**jobrole_currentyears**    Job role and years in current role boxplot
+
+**jobrole_numcompanies***   Job role and number of companies worked
+
+**job_attrition**           Job role and attrition bar graphs
+
+**job_travel**              Job role and travel bar graphs
+
+**job_dept**                Job role and dept bar graphs
+
+**job_edufield**            Job role and education bar graphs
+
+**job_marital**             Job role and marital status bar graphs
+
+**job_overttime**           Job role and overtime status bar graphs
+
+**job_att_percent_bar**     Percentage within job role for attrition and overttime
+
+**att_age_a**               Throwaway graph to obtain common Att
+
+**att_age**                 Attrition and Age density plot
+
+**att_distance**            Attrition and distance from home density plot
+
+**att_monthlyincome**       Attrition and monthly income density plot
+
+**att_salaryincrease**      Attrition and percent salary increase density plot
+
+**att_yearscomp**           Attrition and Years in current role density plot 
+
+**att_yearsrole**           Attrition in current role  density plot
+
+**att_yearspromo**          Attrition and years since last promotion density plot
+
+**att_yearsmanager**        Attrition and years with current manager  desity plot
+
+**att_travel_count**        Attrition and business travel bar plot
+
+**att_dept_count**          Attrition and department bar plot
+
+**att_edufied_count**       Attrition and Education field bar plot
+
+**att_gender_count**        Attrition and Gender field bar plot
+
+**att_marital_count**       Attrition and Marital field bar plot 
+
+**att_overtime_count**      Attrition and Overtime field bar plot 
+
+**knn_model**               Train model for knn
+
+**prediction_knn**          Predict for knn model 
+
+**cart_model**              Classification and Regression tree model on training
+
+**employee_rf**             Random forest model for training data
+
+
+-----------------------------------------------------------------------------------
