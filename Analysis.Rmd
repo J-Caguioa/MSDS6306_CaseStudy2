@@ -764,7 +764,7 @@ att_numcompanies <- ContDensity(employee_factor, "NumCoWorked", "Attrition") +
 att_totalyears <- ContDensity(employee_factor, "TotalWrkYrs", "Attrition") +
   ggtitle("Total Working Years") + theme(legend.position="none")
 # Attrition and Training Times Last Year density plot.
-att_monthlyincome <- ContDensity(employee_factor, "TrainPrevYr", "Attrition") +
+att_trainprevyear <- ContDensity(employee_factor, "TrainPrevYr", "Attrition") +
   ggtitle("Training Times Last Year") + theme(legend.position="none")
 # Attrition and Years at Company density plot.
 att_yearscomp <- ContDensity(employee_factor, "YrsAtComp", "Attrition") +
@@ -781,7 +781,7 @@ att_yearsmanager <- ContDensity(employee_factor, "YrsWtCurMgr", "Attrition") +
 
 # Collectively output Attrition density plots to show distributions.
 grid.arrange(att_age, att_distance, att_monthlyincome, att_salaryincrease, 
-             att_numcompanies, att_totalyears, att_monthlyincome, att_yearscomp, 
+             att_numcompanies, att_totalyears, att_trainprevyear, att_yearscomp,
              att_yearsrole, att_yearspromo, att_yearsmanager, attrition_legend, 
              ncol=4, 
              top=textGrob("Attrition Density Distributions", 
@@ -1016,6 +1016,7 @@ glmStep_imp[order(glmStep_imp$Overall, decreasing=T),]
 
 ```
 
+#### k-Nearest Neighbors
 
 ```{r attrition-knn}
 
@@ -1027,6 +1028,8 @@ prediction_knn <- predict(knn_model, test_subset)
 confusionMatrix(prediction_knn, test_subset$Attrition, positive="Yes")
 
 ```
+
+#### Decision Tree/Random Forest
 
 ```{r attrition-cart}
 
