@@ -417,10 +417,16 @@ However, an early exploratory histogram showed that Monthly Income is right-skew
 
 ```{r age-income2}
 
-# Log transform income. 
+# Log transform nonnormal numeric variables that do not have 0 as minimum.
 employee_log <- data.frame(employee_factor)
+employee_log$lDistFromHme <- log(employee_log$DistFromHme)
 employee_log$lMnthInc <- log(employee_log$MnthInc)
-employee_log$MnthInc <- NULL
+employee_log$lPcntSalInc <- log(employee_log$PcntSalInc)
+employee_log[, c("DistFromHme", "MnthInc", "PcntSalInc")] <- NULL
+
+# Factorize appropriate variables.
+factorize <- c("Education", "EnvironSat", "JobInvolvemt", "JobLevel", "JobSat", "PerfRating", "RelationSat", "StckOptLev", "WorkLifeBal")
+employee_log %<>% mutate_each(funs(factor(.)), factorize)
 
 # Scatterplot on Age, log(Monthly Income), and Gender.
 ggplot(employee_log, aes(x=Age, y=lMnthInc, color=Gender)) +
@@ -988,7 +994,11 @@ Of these factors, which are the biggest determinants for attrition, and is it po
 
 ### Building a Predictive Model
 
+In each of the following models, the original data set is divided into training and testing subsets. We build a model based on the training data, and then see how accurately the model can predict known results in the testing data.
+
 #### Logistic Regression
+
+For a classification problem, logistic regression is a natural first model to try.
 
 ```{r attrition-glm}
 
@@ -1016,20 +1026,82 @@ glmStep_imp[order(glmStep_imp$Overall, decreasing=T),]
 
 ```
 
+This first model is 77.93% accurate, with 71.19% sensitivity for detecting those who attrite. Of note, it reports that Overtime, Years Since Promotion, Job Satisfaction, and Number of Companies Worked are among the most important predictors.
+
+However, this intial model is on the original, untransformed data. Histograms from the exploratory data analysis show that some variables are heavily right skewed, such as Monthly Income. To ensure that our linear regression model meets the normality assumption, we attempt to log transform the numeric variables where possible. Many variables regarding number of years contain zeros, which do not produce valid numbers when log transformed. These observations cannot be dropped because those employees are part of the target group we are trying to identify. Thus, we proceed with a select few variables transformed: Distance From Home, Monthly Income, and Percent Salary Increase. Additionally, we drop some of the "Years" variables that are highly correlated.
+
+```{r attrition-glm-log}
+
+# Remove collinear variables based on correlogram.
+employee_log[, c("YrsCurrRole", "YrsSncPromo", "YrsWtCurMgr")] <- NULL
+
+# Replicable stratified sampling on Attrition.
+set.seed(123)
+train_rows2 <- createDataPartition(y=employee_log$Attrition, p=0.75, list=F)
+train_subset2 <- employee_log[train_rows2,]
+test_subset2 <- employee_log[-train_rows2,]
+
+# Create models with no and all predictors as starting/endpoints for automatic variable selection.
+null_model2 <- glm(Attrition~1, data=train_subset2, family="binomial")
+full_model2 <- glm(Attrition~., data=train_subset2, family="binomial")
+
+# Build stepwise regression model and classify based on mean probability.
+set.seed(123)
+glmStep_model2 <- step(null_model2, scope=list(lower=null_model2, upper=full_model2), direction="both", trace=F)
+glmStep_prob2 <- predict(glmStep_model2, newdata=test_subset2, type="response")
+prediction_glmStep2 <- as.factor(ifelse(glmStep_prob2 > 0.16, "Yes", "No"))
+confusionMatrix(prediction_glmStep2, test_subset2$Attrition, positive="Yes")
+
+# View most important predictors for stepwise model.
+glmStep_imp2 <- as.data.frame(varImp(glmStep_model2))
+glmStep_imp2 <- data.frame(Overall=glmStep_imp2$Overall, Predictors=rownames(glmStep_imp2))
+glmStep_imp2[order(glmStep_imp2$Overall, decreasing=T),]
+
+```
+
+The overall accuracy on this second model goes up slightly to 79.56%, with additional incremental improvement on sensitivity for Attrition at 72.88%. In this model, Overtime, Stock Option Level, Number of Companies Worked, Job Satisfaction, Work Life Balance, Business Travel, and Environment Satisfaction are among the most important predictors.
+
 #### k-Nearest Neighbors
 
-```{r attrition-knn}
+Another model is k-nearest neighbors, which makes classifications based on Euclidean distances between values. The disparity between ranges means we need to begin by normalizing our numeric values so that they are not the main determinants.
+
+```{r attrition-knn1}
+
+# Create new data frame for normalized numbers. Factorize appropriate columns.
+employee_normalize <- data.frame(employee_factor)
+employee_normalize %<>% mutate_each(funs(factor(.)), factorize)
+
+# Normalize numeric variables, then cbind back to factors.
+normalizeNum <- c("Age", "DailyRate", "DistFromHme", "HourlyRate", "MnthInc", "MnthRate", "NumCoWorked", "PcntSalInc", "TotalWrkYrs", "TrainPrevYr", "YrsAtComp", "YrsCurrRole", "YrsSncPromo", "YrsWtCurMgr")
+normNames <- names(employee_normalize) %in% normalizeNum
+notnormalized <- employee_normalize[!normNames]
+normparameters <- preProcess(employee_normalize[,normalizeNum], method=c("range"))
+normalized <- predict(normparameters, employee_normalize[,normalizeNum])
+employee_normalize <- cbind(notnormalized, normalized)
+
+# Stratified sampling on Attrition.
+set.seed(123)
+train_rows3 <- createDataPartition(y=employee_normalize$Attrition, p=0.75, list=F)
+train_subset3 <- employee_normalize[train_rows3,]
+test_subset3 <- employee_normalize[-train_rows3,]
 
 # Create k-nearest neighbors model on training data, test on testing data.
 set.seed(123)
 train_control <- trainControl(method="cv", number=10)
-knn_model <- train(Attrition~., train_subset, method='knn', trControl=train_control)
-prediction_knn <- predict(knn_model, test_subset)
-confusionMatrix(prediction_knn, test_subset$Attrition, positive="Yes")
+knn_model <- train(Attrition~., train_subset3, method='knn', trControl=train_control)
+prediction_knn <- predict(knn_model, test_subset3)
+confusionMatrix(prediction_knn, test_subset3$Attrition, positive="Yes")
+
+# Show most important variables.
+varImp(knn_model)
 
 ```
 
+This model has a 82.83% accuracy rate and is good at picking out true negatives. However, its sensitivity for identifying Attrition is very low, at 6.78%. In other words, it is not a good model for picking out those who would attrite. For what it's worth, the model identifies Monthly Income, Total Work Years, Years At Company, Overtime, and Years In Current Role as the most important predictors.
+
 #### Decision Tree/Random Forest
+
+Another classification method is the decision tree. 
 
 ```{r attrition-cart}
 
@@ -1042,6 +1114,10 @@ prediction_cart <- predict(cart_model, newdata=test_subset, type="class")
 confusionMatrix(prediction_cart, test_subset$Attrition, positive="Yes")
 
 ```
+
+The decision tree fares slightly better than the k-NN model, with 85.29% overall accuracy and 32.20% sensitivity to Attrition. Still, this is not particularly good for identifying attriting employees.
+
+A random forest model is an ensemble of decision trees. Theoretically, the crowd's perforamnce should exceed that of the individual.
 
 ```{r attrition-randomforest}
 
@@ -1058,6 +1134,10 @@ prediction_rf <- predict(employee_rf, newdata=test_subset, type="class")
 confusionMatrix(test_subset$Attrition, prediction_rf, positive="Yes")
 
 ```
+
+Indeed, the ensemble method works better. With 86.92% accuracy and 86.67% sensitivity at detecting actual attriting employees, the random forest is our best model among those attempted. While there are more false positives, false negatives (people predicted not to attrite who actually do) are more costly, so minimizing that metric is more important.
+
+This model lists Overtime, Job Role, Total Work Years, and Monthly Income as its overall most important predictors. For predicting those who attrite specifically, Overtime, Job Level, Stock Option Level (likely a symptom of other predictors like Job Level), and Job Satisfaction are most significant, with Age and Monthly Income following behind.
 
 ## 4d. Life Satisfaction
 
