@@ -1059,7 +1059,7 @@ glmStep_imp2[order(glmStep_imp2$Overall, decreasing=T),]
 
 ```
 
-The overall accuracy on this second model goes up slightly to 79.56%, with additional incremental improvement on sensitivity for Attrition at 72.88%. In this model, Overtime, Stock Option Level, Number of Companies Worked, Job Satisfaction, Work Life Balance, Business Travel, and Environment Satisfaction are among the most important predictors.
+The overall accuracy on this second model goes up slightly to 80.38%, but sensitivity for Attrition actually drops to 67.80%. In this model, Overtime, Stock Option Level, Number of Companies Worked, Job Satisfaction, Work Life Balance, Business Travel, and Environment Satisfaction are among the most important predictors.
 
 #### k-Nearest Neighbors
 
