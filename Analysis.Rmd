@@ -1297,7 +1297,7 @@ The Job specific trends that surfaced with our analysis include:
 
 ## Other considerations
 
-Our recommendates for next steps and other variables needed are as follows:
+Our recommendations for next steps and other variables needed are as follows:
 
 1. Provide concrete definition for Life Satisfaction so that it can be included in future analysis
 2. The low pay in young, new talent is causing attrition.  Our recommendation is to increase the starting salary of employees. In the long run this will cost you less as you are not having to train and ramp new talent up and then have them leave the company
