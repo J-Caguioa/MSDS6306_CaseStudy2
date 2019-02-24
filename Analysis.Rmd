@@ -1280,9 +1280,9 @@ ggplot(attrited.atCoLessThan2Yrs, aes(x=Overtime, y=..count..)) +
 
 For our analysis, we found that the following most attributed to the attrition: 
 
-1. Age
-2. Monthly Income
-3. Job Role
+1. Overtime
+2. Job Level
+3. Stock Option Level
   
 * In addition the following factors were included in the model: Overtime, Distance from Home, and Business Travel
   
