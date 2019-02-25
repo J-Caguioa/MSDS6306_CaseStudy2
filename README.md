@@ -9,7 +9,7 @@
 - [Joseph Caguioa](mailto:jcaguioa@mail.smu.edu)
 - [Jeff Washburn](mailto:washburnj@mail.smu.edu)
 
-# DDS Analytic
+# DDSAnalytics
 
 Talent management analytics company DDSAnalytics wants to use data science to identify factors contributing to turnover. This repository contains the data science team's code and step-by-step process to meet this need.
  
@@ -23,7 +23,7 @@ Your team has been given a dataset (CaseStudy2-Data.xlsx) to conduct exploratory
 
 
 # Code Book 
-The Code Book can be found [here](CaseStudy2_Codebook.html)
+The Code Book can be found [here](CaseStudy2_Codebook.Rmd)
 
 
 ## Approach of the Analysis
@@ -93,7 +93,7 @@ The complete analysis has been created in R and RMarkdown
 
 3. For stock options, our recommendation is to invest in your employees by offering higher option level.  One aspect to this that has been successful in the past is to offer stock options to employees with a 4 year vesting period and have yearly refresh grants based on performance.  This will ensure vested interested by employees by seeing a direct correlation in the success of the business will have a positive financial impact for them as well
 
-4. Our recommendation to increase job satisifaction is to become a more inclusive company by offering a workplace that offers creative development.  Folks should want to come to work.  Offering meal compensations and for employees with long commutes, offering toll tag incentives.  
+4. Our recommendation to increase job satisfaction is to become a more inclusive company by offering a workplace that offers creative development.  Folks should desire to come to work.  Offering meal compensations and for employees with long commutes, offering toll tag incentives.  
 
 5. Fresh, new talent is the future and lifeblood of your company - introducing them and having them start off in other parts of the company will only reinforce the idea of inclusion and make them feel they are a part of something and we recommend starting young employees off in other parts of the business so they can grow, learn and feel they are apart of the bigger picture
 
@@ -104,3 +104,4 @@ The complete analysis has been created in R and RMarkdown
 
 1. Provide concrete definition for Life Satisfaction so that it can be included in future analysis
 2. Define the Stock Option levels in more detail and what that means
+
