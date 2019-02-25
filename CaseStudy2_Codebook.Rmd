@@ -1313,7 +1313,7 @@ ggAggHist(data = structure(list(xmin = c(0, 2, 4, 6, 8, 10, 12,
 \fullline
 
 # **Analysis Objects**
-Two versions of the original employee data frame are created. One converts all character variables and select rating-type numeric variables to factors. The other goes a step further and coerces all variables to numeric. Both are used in different ways during the analysis.
+Three versions of the original employee data frame are created. One converts all character variables and select rating-type numeric variables to factors. The second dataframe goes a step further and coerces all variables to numeric. The third version is the same as employee_factor with various  fields having a log transformation.   All are used in different ways during the analysis.
 
 ### employee_factor
 
@@ -1471,6 +1471,85 @@ Variable             Class       # unique  Missing
 **[YrsWtCurMgr]**    numeric           18  0.00 %                
 -------------------------------------------------------------------------
 
+
+### employee_log
+
+---------------------------------------------------
+Variable             Class       # unique  Missing  
+                                           values                        
+-------------------- --------- ---------- --------- 
+**[Age]**            numeric           43  0.00 %                
+
+**[Attrition]**      factor             2  0.00 %                
+
+**[BusTravel]**      factor             3  0.00 %                
+
+**[DailyRate]**      numeric          886  0.00 %                
+
+**[Department]**     factor             3  0.00 %                
+
+**[DistFromHme]**    log(numeric)      29  0.00 %                
+
+**[Education]**      factor             5  0.00 %                
+
+**[EduField]**       factor             6  0.00 %                
+
+**[EmpCount]**       numeric            1  0.00 %                
+
+**[EmpId]**          numeric         1470  0.00 %                
+
+**[EnvironSat]**     factor             4  0.00 %                
+
+**[Gender]**         factor             2  0.00 %                
+
+**[HourlyRate]**     numeric           71  0.00 %                
+
+**[JobInvolvemt]**   factor             4  0.00 %                
+
+**[JobLevel]**       factor             5  0.00 %                
+
+**[JobRole]**        factor             9  0.00 %                
+
+**[JobSat]**         factor             4  0.00 %                
+
+**[MaritalStat]**    factor             3  0.00 %                
+ 
+**[MnthInc]**        log(numeric)    1349  0.00 %                
+
+**[MnthRate]**       numeric         1427  0.00 %                
+
+**[NumCoWorked]**    numeric           10  0.00 %                
+
+**[Over18]**         factor             1  0.00 %                
+
+**[Overtime]**       factor             2  0.00 %                
+
+**[PcntSalInc]**     log(numeric)      15  0.00 %                
+
+**[PerfRating]**     factor             2  0.00 %                
+
+**[RelationSat]**    factor             4  0.00 %                
+
+**[StandHours]**     factor             1  0.00 %                
+
+**[StckOptLev]**     factor             4  0.00 %                
+
+**[TotalWrkYrs]**    numeric           40  0.00 %                
+
+**[TrainPrevYr]**    numeric            7  0.00 %                
+
+**[WorkLifeBal]**    factor             4  0.00 %                
+
+**[YrsAtComp]**      numeric           37  0.00 %                
+
+**[YrsCurrRole]**    numeric           19  0.00 %                
+
+**[YrsSncPromo]**    numeric           16  0.00 %                
+
+**[YrsWtCurMgr]**    numeric           18  0.00 %                
+-------------------------------------------------------------------------
+
+
 # Non-Visualization Variables
 
  
@@ -1488,7 +1567,8 @@ Feature                      Result
 
 **GenderData**              Male, Female 
 
-**JobRoleData**             Healthcare Representative, Human Resources, Laboratory Technician, Manager                                        Manufacturing Director, Research Director, Research Scientist, 
+**JobRoleData**             Healthcare Representative, Human Resources, Laboratory Technician, Manager                                                
+                            Manufacturing Director, Research Director, Research Scientist, 
                             Sales Executive, Sales Representative
 
 **ManagerRoleData**         Manager, Manufacturing Director, Research Director
@@ -1511,8 +1591,15 @@ Feature                      Result
 
 **glmStep_model**           Stepwise regression model 
 
+**employee_normalize**      a copy of employee_factor with all numeric variables normalized between 0 and 1
 
+**knn_model**               Train model for knn
 
+**prediction_knn**          Predict for knn model 
+
+**cart_model**              Classification and Regression tree model on training
+
+**employee_rf**             Random forest model for training data
 
 
 
@@ -1614,14 +1701,6 @@ Feature                      Result
 **att_marital_count**       Attrition and Marital field bar plot 
 
 **att_overtime_count**      Attrition and Overtime field bar plot 
-
-**knn_model**               Train model for knn
-
-**prediction_knn**          Predict for knn model 
-
-**cart_model**              Classification and Regression tree model on training
-
-**employee_rf**             Random forest model for training data
 
 
 -----------------------------------------------------------------------------------
