@@ -68,7 +68,24 @@ The complete analysis has been created in R and RMarkdown
 3. Sales representative also have the lowest total working years, years in current role, years at current company and years with current manager
 
 
-# Opportunities/Recommendations
+# Other Considerations 
+
+## Insights
+
+1. Component that we discovered during our analysis is that was that overtime was quite high among those employees that left.
+
+2. The employees that had lower job level (1, 2) most likely the ones to leave
+
+3. Those employees with stock options at level (0, 1) contributed to attrition
+
+4. Those employees that rated their job satisfaction level 0, 1 most likely to leave
+
+5. The younger aged employees fit the profile of those employees leaving
+
+6. Employees that make a lower income are contributing to attrition
+
+
+## Recommendations
 
 1. Our recommendation is to reduce the amount of overtime and offer other incentives for having to work overtime - like extended holiday time, gift cards for family dinner
 
@@ -81,3 +98,9 @@ The complete analysis has been created in R and RMarkdown
 5. Fresh, new talent is the future and lifeblood of your company - introducing them and having them start off in other parts of the company will only reinforce the idea of inclusion and make them feel they are a part of something and we recommend starting young employees off in other parts of the business so they can grow, learn and feel they are apart of the bigger picture
 
 6. The low pay in young, new talent is causing attrition.  Our recommendation is to increase the starting salary of employees. In the long run this will cost you less as you are not having to train and ramp new talent up and then have them leave the company
+
+
+## Improvements
+
+1. Provide concrete definition for Life Satisfaction so that it can be included in future analysis
+2. Define the Stock Option levels in more detail and what that means
