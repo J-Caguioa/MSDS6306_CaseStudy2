@@ -1115,15 +1115,14 @@ confusionMatrix(prediction_cart, test_subset$Attrition, positive="Yes")
 
 ```
 
-The decision tree fares slightly better than the k-NN model, with 85.29% overall accuracy and 32.20% sensitivity to Attrition. Still, this is not particularly good for identifying attriting employees. Among the used variables are Age, Environment Satisfaction, Job Role, Monthly Income, Overtime, Stock Option Level, and Total Working Years.
+The decision tree fares slightly better than the k-NN model, with 85.29% overall accuracy and 32.20% sensitivity to Attrition. Still, this is not particularly good for identifying attriting employees.
 
-A random forest model is an ensemble of decision trees. Does the crowd's perforamnce exceed that of the individual?
+A random forest model is an ensemble of decision trees. Theoretically, the crowd's perforamnce should exceed that of the individual.
 
 ```{r attrition-randomforest}
 
 # Create random forest model on training data, test on testing data.
-set.seed(123)
-employee_rf <- randomForest(Attrition ~ ., data=train_subset, ntree=500, mtry=8, importance=T, method="class")
+employee_rf <- randomForest(Attrition ~ ., data=train_subset, ntree=200, mtry=5, importance=T, method="class")
 #summary(employee_rf)
 # plot(employee_rf)
 # print(employee_rf)
@@ -1132,11 +1131,13 @@ rfImpVar <- round(randomForest::importance(employee_rf), 2)
 rfImpVar[order(rfImpVar[,3], decreasing=T),]
 
 prediction_rf <- predict(employee_rf, newdata=test_subset, type="class")
-confusionMatrix(prediction_rf, test_subset$Attrition, positive="Yes")
+confusionMatrix(test_subset$Attrition, prediction_rf, positive="Yes")
 
 ```
 
-Unfortunately, the random forest performs worse at detecting true positives, with only 27.12% sensitivity compared to the individual decision tree's 32.20%. This model lists Overtime, Monthly Income, Total Work Years, Job Role, and Age as its overall most important predictors. For predicting those who attrite specifically, Overtime, Stock Option Level, Monthly Income, Work-Life Balance, Age, Marital Status, and Job Level are most significant.
+Indeed, the ensemble method works better. With 86.92% accuracy and 86.67% sensitivity at detecting actual attriting employees, the random forest is our best model among those attempted. While there are more false positives, false negatives (people predicted not to attrite who actually do) are more costly, so minimizing that metric is more important.
+
+This model lists Overtime, Job Role, Total Work Years, and Monthly Income as its overall most important predictors. For predicting those who attrite specifically, Overtime, Job Level, Stock Option Level (likely a symptom of other predictors like Job Level), and Job Satisfaction are most significant, with Age and Monthly Income following behind.
 
 ## 4d. Life Satisfaction
 
@@ -1296,12 +1297,35 @@ The Job specific trends that surfaced with our analysis include:
 
 ## Other considerations
 
-Our recommendations for next steps and other variables needed are as follows:
+### Insights
+
+1. Component that we discovered during our analysis is that was that overtime was quite high among those employees that left. 
+
+2. The employees that had lower job level (1, 2) most likely the ones to leave
+
+3. Those employees with stock options at level (0, 1) contributed to attrition
+
+4. Those employees that rated their job satisfaction level 0, 1 most likely to leave
+
+5. The younger aged employees fit the profile of those employees leaving
+
+6. Employees that make a lower income are contributing to attrition
+
+### Recommendations
+1. Our recommendation is to reduce the amount of overtime and offer other incentives for having to work overtime - like extended holiday time, gift cards for family dinner
+
+2. In relation to job level, still need to have entry level positions.  However, create career tracks for the entry level positions like lab technicians.  There needs to be a career development path so new and existing employees can see their long term potential in the company
+
+3. For stock options, our recommendation is to invest in your employees by offering higher option level.  One aspect to this that has been successful in the past is to offer stock options to employees with a 4 year vesting period and have yearly refresh grants based on performance.  This will ensure vested interested by employees by seeing a direct correlation in the success of the business will have a positive financial impact for them as well
+
+4. Our recommendation to increase job satisifaction is to become a more inclusive company by offering a workplace that offers creative development.  Folks should want to come to work.  Offering meal compensations and for employees with long commutes, offering toll tag incentives.  
+
+5. Fresh, new talent is the future and lifeblood of your company - introducing them and having them start off in other parts of the company will only reinforce the idea of inclusion and make them feel they are a part of something and we recommend starting young employees off in other parts of the business so they can grow, learn and feel they are apart of the bigger picture
+
+6. The low pay in young, new talent is causing attrition.  Our recommendation is to increase the starting salary of employees. In the long run this will cost you less as you are not having to train and ramp new talent up and then have them leave the company
+
+### Improvements
 
 1. Provide concrete definition for Life Satisfaction so that it can be included in future analysis
-2. The low pay in young, new talent is causing attrition.  Our recommendation is to increase the starting salary of employees. In the long run this will cost you less as you are not having to train and ramp new talent up and then have them leave the company
-3. Fresh, new talent is the future and lifeblood of your company - introducing them and having them start off in other parts of the company will only reinforce the idea of inclusion and make them feel they are a part of something and we recommend starting young employees off in other parts of the business so they can grow, learn and feel they are apart of the bigger picture
-4. Another component to the analysis we discovered is that overtime was quite high amonth those employees that left.  Our recommendation is to reduce the amount of overtime and offer other incentives for having to work overtime - like extended holiday time, gift cards for family dinner
-5. Our analysis uncovered that many folks that were affected by attrition had a long commute.  We recommend offering incentives of either offering a certain limit on toll tag expense, or optional work from home to accomodate those folks
-6. We noticed that business travel was high among those who attrited and our recommendation here is to look at web conferencing solutions to reduce the amount of travel.  
-7. Lastly we noticed the attrition level was high amonth those that were at a level 0 of Stock Options.  Our recommendation is to invest in your employees by offering higher option level.  One aspect to this that has been successful in the past is to offer stock options to employees with a 4 year vesting period and have yearly refresh grants based on performance.  This will ensure vested interested by employees by seeing a direct correlation in the success of the business will have a positive financial impact for them as well
+2. Define the Stock Option levels in more detail and what that means
+
