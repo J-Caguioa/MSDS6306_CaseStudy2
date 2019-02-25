@@ -1276,15 +1276,22 @@ ggplot(attrited.atCoLessThan2Yrs, aes(x=Overtime, y=..count..)) +
 
 # Conclusion
 
-## Three factors contributing to turnover.
+## Top factors that contribute to turnover:
 
 For our analysis, we found that the following most attributed to the attrition: 
 
 1. Overtime
+   * Those employees that worked overtime led to attrition
 2. Job Level
+   * The employees that had lower job level (1, 2) most likely the ones to leave
 3. Stock Option Level
-  
-* In addition the following factors were included in the model: Overtime, Distance from Home, and Business Travel
+   * Those employees with stock options at level 0,1 contributed to attrition
+4. Job Satisfaction
+   * Those employees that rated their job satisfaction level 0, 1 most likely to leave
+5. Age
+   * The younger aged employees fit the profile of those employees leaving
+6. Monthly Income
+   * Employees that make a lower income are contributing to attrition
   
 ## Job-specific trends.
 
