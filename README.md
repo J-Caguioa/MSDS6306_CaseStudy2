@@ -23,7 +23,7 @@ Your team has been given a dataset (CaseStudy2-Data.xlsx) to conduct exploratory
 
 
 # Code Book 
-The Code Book can be found [here](CaseStudy2_Codebook.Rmd)
+The Code Book can be found [here](./CaseStudy2_Codebook.html)
 
 
 ## Approach of the Analysis
